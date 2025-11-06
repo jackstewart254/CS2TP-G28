@@ -30,8 +30,8 @@ export function NavigationBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <Navbar className="border-b backdrop-blur-md">
-      <NavBody className="bg-white dark:bg-[hsl(0_0%_3.9%)]">
+    <Navbar className="">
+      <NavBody className="backdrop-blur-md">
         <NavbarLogo />
         <NavItems items={navItems} />
         <div className="flex items-center gap-4">

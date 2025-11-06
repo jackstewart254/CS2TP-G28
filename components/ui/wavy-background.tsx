@@ -32,7 +32,7 @@ export const WavyBackground = ({
 
   const bg = !mounted
     ? "transparent"
-    : backgroundFill || (theme === "dark" ? "hsl(0 0% 3.9%)" : "#ffffff");
+    : backgroundFill || (theme === "dark" ? "#000" : "#ffffff");
 
   const textColor = !mounted
     ? ""
@@ -65,8 +65,10 @@ export const WavyBackground = ({
   const init = () => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
-    w = ctx.canvas.width = window.innerWidth;
-    h = ctx.canvas.height = window.innerHeight;
+    const parent = canvas.parentElement;
+    w = ctx.canvas.width = parent?.clientWidth || window.innerWidth;
+    h = ctx.canvas.height = parent?.clientHeight || window.innerHeight;
+
     ctx.filter = `blur(${blur}px)`;
     nt = 0;
     window.onresize = function () {
@@ -132,7 +134,7 @@ export const WavyBackground = ({
   return (
     <div
       className={cn(
-        "h-screen flex flex-col items-center justify-center",
+        "h-full w-full flex flex-col items-center justify-center",
         containerClassName
       )}
     >
