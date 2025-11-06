@@ -28,11 +28,18 @@ export const WavyBackground = ({
   [key: string]: any;
 }) => {
   const { theme } = useTheme();
-  const bg =
-    backgroundFill || (theme === "dark" ? "hsl(0 0% 3.9%)" : "#ffffff");
-  const textColor = theme === "dark" ? "text-white" : "text-black";
-
   const [mounted, setMounted] = useState(false);
+
+  const bg = !mounted
+    ? "transparent" // or whatever neutral
+    : backgroundFill || (theme === "dark" ? "hsl(0 0% 3.9%)" : "#ffffff");
+
+  const textColor = !mounted
+    ? ""
+    : theme === "dark"
+    ? "text-white"
+    : "text-black";
+
   useEffect(() => setMounted(true), []);
 
   const noise = createNoise3D();
