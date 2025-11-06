@@ -31,7 +31,7 @@ export const WavyBackground = ({
   const [mounted, setMounted] = useState(false);
 
   const bg = !mounted
-    ? "transparent" // or whatever neutral
+    ? "transparent"
     : backgroundFill || (theme === "dark" ? "hsl(0 0% 3.9%)" : "#ffffff");
 
   const textColor = !mounted
@@ -127,7 +127,7 @@ export const WavyBackground = ({
     return () => cancelAnimationFrame(animationId);
   }, [mounted, bg]);
 
-  if (!mounted) return null;
+  if (!mounted || theme === undefined) return null;
 
   return (
     <div
