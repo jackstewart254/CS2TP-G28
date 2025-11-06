@@ -31,6 +31,7 @@ export default function RootLayout({
           attribute="class"
           enableSystem
           disableTransitionOnChange
+          defaultTheme="light"
           value={{
             light: "light",
             dark: "dark",
