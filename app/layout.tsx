@@ -29,13 +29,12 @@ export default function RootLayout({
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          // value={{
-          //   light: "light",
-          //   dark: "dark",
-          // }}
+          value={{
+            light: "light",
+            dark: "dark",
+          }}
         >
           {children}
         </ThemeProvider>
