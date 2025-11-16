@@ -1,4 +1,4 @@
-import Landing from "./content";
+import Landing from "./landing/content";
 
 export default function Home() {
   return <Landing />;

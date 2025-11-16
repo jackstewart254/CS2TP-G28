@@ -22,8 +22,16 @@ export function NavigationBar() {
       link: "/products",
     },
     {
-      name: "Pricing",
-      link: "#pricing",
+      name: "Dashboard",
+      link: "/dashboard",
+    },
+    {
+      name: "Admin",
+      link: "/admin-dashboard",
+    },
+    {
+      name: "Account",
+      link: "/account",
     },
   ];
 

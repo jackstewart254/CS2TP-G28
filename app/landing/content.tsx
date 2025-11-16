@@ -1,11 +1,9 @@
 "use client";
 
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WavyBackground } from "@/components/ui/wavy-background";
 import { NavigationBar } from "@/components/navigation";
-import { BentoGridDemo } from "./components/bento-grid";
-import { InfiniteMovingCardsDemo } from "./components/infinite-moving";
 import { CardSpotlightCategories } from "./components/products";
+import { Footer } from "@/components/footer";
 
 export default function Landing() {
   return (
@@ -26,16 +24,10 @@ export default function Landing() {
               </p>
             </WavyBackground>
           </div>
-          {/* <BentoGridDemo /> */}
 
-          {/* <InfiniteMovingCardsDemo /> */}
           <CardSpotlightCategories />
         </div>
-
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>Powered by CS2TP-G28</p>
-          <ThemeSwitcher />
-        </footer>
+        <Footer />
       </div>
     </main>
   );
