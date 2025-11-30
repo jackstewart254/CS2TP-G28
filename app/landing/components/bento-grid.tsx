@@ -34,7 +34,7 @@ export function BentoGridDemo() {
 
         <p className="mt-4 text-center text-base text-neutral-600 dark:text-neutral-400">
           Foundation Data turns the job market into clear, reliable
-          intelligence— helping you understand demand, test ideas, and make
+          intelligence—helping you understand demand, test ideas, and make
           confident decisions backed by real insight.
         </p>
       </div> */}
@@ -58,7 +58,7 @@ const items = [
   {
     title: "Market Insight Foundations",
     description:
-      "Understand the core signals driving today’s job market, from skill demand to emerging roles.",
+      "Understand the core signals driving today's job market, from skill demand to emerging roles.",
 
     icon: <IconClipboardCopy className="h-4 w-4 text-neutral-500" />,
   },
@@ -86,8 +86,29 @@ const items = [
   {
     title: "The Future of Skill Knowledge",
     description:
-      "Track rising skills, shifting roles, and the knowledge shaping tomorrow’s opportunities.",
+      "Track rising skills, shifting roles, and the knowledge shaping tomorrow's opportunities.",
 
     icon: <IconArrowWaveRightUp className="h-4 w-4 text-neutral-500" />,
+  },
+  {
+    title: "Product Lead, Atlas Labs",
+    description:
+      "We shipped faster because we finally knew which roles to prioritize and what skills customers actually value.",
+
+    icon: <IconChartBar className="h-4 w-4 text-neutral-500" />,
+  },
+  {
+    title: "Founder, Northwind",
+    description:
+      "Foundation Data let us validate our next market in days instead of months, with evidence the whole team trusts.",
+
+    icon: <IconBoxAlignRightFilled className="h-4 w-4 text-neutral-500" />,
+  },
+  {
+    title: "Ops Director, Meridian",
+    description:
+      "Clear hiring signals helped us reduce time-to-fill and align stakeholders on the roles that actually drive impact.",
+
+    icon: <IconBoxAlignTopLeft className="h-4 w-4 text-neutral-500" />,
   },
 ];
