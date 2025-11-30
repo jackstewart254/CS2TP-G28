@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useMemo, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 type BillingInterval = "monthly" | "annual";
@@ -103,8 +104,16 @@ const initialCards: SavedCard[] = [
 ];
 
 export default function Payment() {
+  const searchParams = useSearchParams();
+  const initialPlanId = useMemo(() => {
+    const planParam = searchParams.get("plan");
+    return planParam && plans.some((p) => p.id === planParam) ? planParam : null;
+  }, [searchParams]);
+
   const [interval, setInterval] = useState<BillingInterval>("monthly");
-  const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
+  const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>(() =>
+    initialPlanId ? [initialPlanId] : [],
+  );
   const [showAvailable, setShowAvailable] = useState(true);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [cardFormOpen, setCardFormOpen] = useState(false);

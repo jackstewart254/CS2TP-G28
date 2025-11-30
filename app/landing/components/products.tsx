@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const categories = [
   {
+    id: "job-market",
     title: "Job Market Data Packs",
     description: "Live insights into skills, roles, and market demand.",
     priceMonthly: 25,
@@ -20,6 +21,7 @@ const categories = [
     ],
   },
   {
+    id: "university-performance",
     title: "University Performance Insights",
     description: "Data to help institutions improve employability outcomes.",
     priceMonthly: 25,
@@ -34,6 +36,7 @@ const categories = [
     ],
   },
   {
+    id: "student-career",
     title: "Student Career Tools",
     description:
       "Tools that help students navigate the job market with clarity.",
@@ -49,6 +52,7 @@ const categories = [
     ],
   },
   {
+    id: "employer-recruitment",
     title: "Employer & Recruitment Tools",
     description: "Insight and intelligence for smarter hiring decisions.",
     priceMonthly: 25,
@@ -63,6 +67,7 @@ const categories = [
     ],
   },
   {
+    id: "education-skill",
     title: "Education & Skill Development",
     description: "Data-driven tools for shaping future-ready curriculums.",
     priceMonthly: 25,
@@ -150,6 +155,7 @@ export function CardSpotlightCategories() {
                 price={isMonthly ? cat.priceMonthly : cat.priceYearly}
                 interval={isMonthly ? "/month" : "/year"}
                 buttonLabel="Subscribe"
+                href={`/payment?plan=${cat.id}`}
                 features={[cat.description]}
                 extras={cat.products.map((p) => p)}
                 rating={cat.rating}
@@ -170,6 +176,7 @@ export function CardSpotlightCategories() {
                 }
                 interval={isMonthly ? "/month" : "/year"}
                 buttonLabel="Subscribe"
+                href={`/payment?plan=${highlightCategory.id}`}
                 features={[highlightCategory.description]}
                 extras={highlightCategory.products.map((p) => p)}
                 rating={highlightCategory.rating}

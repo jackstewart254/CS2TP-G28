@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { CustomPricingNote } from "./custom-pricing-note";
@@ -12,6 +13,7 @@ interface PricingBlockProps {
   extras?: string[];
   buttonLabel?: string;
   rating?: number;
+  href?: string;
 }
 
 export function PricingBlock({
@@ -22,6 +24,7 @@ export function PricingBlock({
   extras = [],
   buttonLabel = "Get Started",
   rating = 4.8,
+  href = "/payment",
 }: PricingBlockProps) {
   const [hovered, setHovered] = useState(false);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,9 +92,12 @@ export function PricingBlock({
               <RatingStars value={rating} />
               <span>{rating.toFixed(1)}/5</span>
             </div>
-            <button className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(59,130,246,0.35)] transition-transform duration-300 group-hover:scale-[1.02]">
+            <Link
+              href={href}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(59,130,246,0.35)] transition-transform duration-300 group-hover:scale-[1.02]"
+            >
               {buttonLabel}
-            </button>
+            </Link>
           </div>
         </HoverImageContainer>
 
@@ -168,9 +174,12 @@ export function PricingBlock({
                     />
                   ))}
                 </div>
-                <button className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(59,130,246,0.35)] hover:scale-[1.01]">
+                <Link
+                  href={href}
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(59,130,246,0.35)] transition hover:scale-[1.01]"
+                >
                   {buttonLabel}
-                </button>
+                </Link>
               </div>
             </div>
           </div>
