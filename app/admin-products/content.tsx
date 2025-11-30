@@ -55,7 +55,7 @@ export default function ProductsPage() {
         <div className="flex justify-end">
           <div
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-black text-white rounded cursor-pointer select-none"
+            className="px-2 py-1 bg-black text-white rounded cursor-pointer select-none"
           >
             Create
           </div>
