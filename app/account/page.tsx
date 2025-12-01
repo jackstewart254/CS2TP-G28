@@ -3,14 +3,14 @@ import { Footer } from "@/components/footer";
 import { NavigationBar } from "@/components/navigation";
 import Account from "./content";
 
-const Home = () => {
+const AccountPage = () => {
   return (
     <div>
       <NavigationBar />
-      <Account />;
+      <Account />
       <Footer />
     </div>
   );
 };
 
-export default Home;
+export default AccountPage;
