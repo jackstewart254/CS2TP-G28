@@ -1,12 +1,17 @@
-import { LayoutTextFlip } from "@/components/ui/layout-text-flip";
-import { motion } from "motion/react";
-import { PricingBlock } from "@/components/pricing-card";
-import { CustomPricingNote } from "@/components/custom-pricing-note";
+"use client"
+
+import { useRouter } from "next/navigation"
+import { motion } from "motion/react"
+
+import { LayoutTextFlip } from "@/components/ui/layout-text-flip"
+import { PricingBlock } from "@/components/pricing-card"
+import { CustomPricingNote } from "@/components/custom-pricing-note"
 
 const categories = [
   {
     title: "Job Market Data Packs",
     description: "Live insights into skills, roles, and market demand.",
+    priceId: "price_1SZEaPRzx5qwXFFMktp3uFGk",
     products: [
       "Top Skills Report",
       "Industry Trends Pack",
@@ -18,6 +23,7 @@ const categories = [
   {
     title: "University Performance Insights",
     description: "Data to help institutions improve employability outcomes.",
+    priceId: "price_1SZWiGRzx5qwXFFMP1Ogmeot",
     products: [
       "Employability Scorecard",
       "Skills Gap Summary",
@@ -28,8 +34,8 @@ const categories = [
   },
   {
     title: "Student Career Tools",
-    description:
-      "Tools that help students navigate the job market with clarity.",
+    description: "Tools that help students navigate the job market with clarity.",
+    priceId: "price_1SZWjIRzx5qwXFFM83EGPX6l",
     products: [
       "Career Match Quiz",
       "Skill Gap Checker",
@@ -41,6 +47,7 @@ const categories = [
   {
     title: "Employer & Recruitment Tools",
     description: "Insight and intelligence for smarter hiring decisions.",
+    priceId: "price_1SZWjaRzx5qwXFFM3pnNqnKu",
     products: [
       "University Talent Finder",
       "Hiring Trends Dashboard",
@@ -52,6 +59,7 @@ const categories = [
   {
     title: "Education & Skill Development",
     description: "Data-driven tools for shaping future-ready curriculums.",
+    priceId: "price_1SZWjtRzx5qwXFFMQafEiy22",
     products: [
       "Emerging Skills Pack",
       "Learning Resource Bundle",
@@ -60,47 +68,42 @@ const categories = [
       "Workshop Ideas Pack",
     ],
   },
-];
+]
 
 export function CardSpotlightCategories() {
+  const router = useRouter()
+
   return (
     <div className="flex flex-col gap-y-6 items-center px-10">
-      <div className="flex flex-col pb-8 ">
-        <motion.div className="relative mx-4  flex flex-col items-center justify-center gap-4 text-center sm:mx-0 sm:mb-0 sm:flex-row">
+      <div className="flex flex-col pb-8">
+        <motion.div className="relative mx-4 flex flex-col items-center justify-center gap-4 text-center sm:mx-0 sm:mb-0 sm:flex-row">
           <LayoutTextFlip
             text="We transform"
-            words={[
-              "Products",
-              "Insights",
-              "Intelligence",
-              "Engines",
-              "Thinking",
-            ]}
+            words={["Products", "Insights", "Intelligence", "Engines", "Thinking"]}
           />
         </motion.div>
         <p className="mt-4 text-center text-base text-neutral-600 dark:text-neutral-400">
-          We bridge the space between raw ideas and concrete
-          understanding—transforming curiosity into clarity, clarity into
-          intelligence, and intelligence into products that move forward.
+          We bridge the space between raw ideas and concrete understanding—transforming
+          curiosity into clarity, clarity into intelligence, and intelligence into
+          products that move forward.
         </p>
       </div>
 
       <div className="lg:flex flex-col gap-6 mb-20">
-        {/* Top row (3 cards) */}
         <div className="grid-cols-1 lg:flex flex-row gap-6 items-center justify-center">
           {categories.map((cat, index) => {
-            const center = (categories.length - 1) / 2;
-            const distance = Math.abs(index - center);
-            const marginTop = distance * 20; // podium effect
+            const center = (categories.length - 1) / 2
+            const distance = Math.abs(index - center)
+            const marginTop = distance * 20
 
             return (
               <div
                 key={cat.title}
                 className={`
-          w-full
-          lg:mt-[${marginTop}px]
+                  w-full
+                  lg:mt-[${marginTop}px]
                   mt-4
-        `}
+                `}
               >
                 <PricingBlock
                   title={cat.title}
@@ -108,13 +111,26 @@ export function CardSpotlightCategories() {
                   interval="/month"
                   buttonLabel="Subscribe"
                   features={[cat.description]}
-                  extras={cat.products.map((p) => `${p}`)}
+                  extras={cat.products.map((p) => p)}
+                  onClick={() => {
+                    const params = new URLSearchParams()
+                    params.set("name", cat.title)
+                    params.set("price", "25")
+                    if ("priceId" in cat && cat.priceId) {
+                      params.set("priceId", cat.priceId as string)
+                    }
+                    router.push(`/payment?${params.toString()}`)
+                  }}
                 />
               </div>
-            );
+            )
           })}
+        </div>
+
+        <div className="mt-8">
+          <CustomPricingNote />
         </div>
       </div>
     </div>
-  );
+  )
 }

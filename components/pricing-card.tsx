@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import { CustomPricingNote } from "./custom-pricing-note";
+import React from "react"
+import { cn } from "@/lib/utils"
+import { CustomPricingNote } from "./custom-pricing-note"
 
 interface PricingBlockProps {
-  title: string;
-  price: string | number;
-  interval?: string;
-  features: string[];
-  extras?: string[];
-  buttonLabel?: string;
+  title: string
+  price: string | number
+  interval?: string
+  features: string[]
+  extras?: string[]
+  buttonLabel?: string
+  onClick?: () => void
 }
 
 export function PricingBlock({
@@ -20,6 +21,7 @@ export function PricingBlock({
   features,
   extras = [],
   buttonLabel = "Get Started",
+  onClick,
 }: PricingBlockProps) {
   return (
     <div className="p-1 sm:p-4 md:p-4 rounded-3xl bg-gray-50 dark:bg-neutral-900 border border-gray-100 dark:border-neutral-800">
@@ -51,16 +53,22 @@ export function PricingBlock({
             </div>
           </div>
 
-          <a
-            className="
-              px-4 py-2 rounded-md bg-gradient-to-b from-blue-500 to-blue-700 
-              text-sm font-bold text-white cursor-pointer inline-block text-center 
-              hover:-translate-y-0.5 transition duration-200 shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]
-              w-full mt-10
-            "
-          >
-            {buttonLabel}
-          </a>
+       <button
+  type="button"
+  onClick={() => {
+    console.log("pricing button clicked")
+    onClick?.()
+  }}
+  className="
+    px-4 py-2 rounded-md bg-gradient-to-b from-blue-500 to-blue-700 
+    text-sm font-bold text-white cursor-pointer inline-block text-center 
+    hover:-translate-y-0.5 transition duration-200 shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]
+    w-full mt-10
+  "
+>
+  {buttonLabel}
+</button>
+
         </div>
 
         <div className="mt-1 p-4">
@@ -79,7 +87,7 @@ export function PricingBlock({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function PricingItem({ text, color }: { text: string; color: string }) {
@@ -88,7 +96,7 @@ function PricingItem({ text, color }: { text: string; color: string }) {
       <div
         className={cn(
           "h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5",
-          color
+          color,
         )}
       >
         <svg
@@ -110,7 +118,7 @@ function PricingItem({ text, color }: { text: string; color: string }) {
         {text}
       </div>
     </div>
-  );
+  )
 }
 
 function Divider() {
@@ -121,9 +129,9 @@ function Divider() {
 
       <div
         className="absolute inset-0 h-5 w-5 m-auto rounded-xl dark:bg-neutral-800 bg-white
-                      shadow-[0px_-1px_0px_0px_var(--neutral-200)] 
-                      dark:shadow-[0px_-1px_0px_0px_var(--neutral-700)] 
-                      flex items-center justify-center"
+                     shadow-[0px_-1px_0px_0px_var(--neutral-200)] 
+                     dark:shadow-[0px_-1px_0px_0px_var(--neutral-700)] 
+                     flex items-center justify-center"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -136,5 +144,5 @@ function Divider() {
         </svg>
       </div>
     </div>
-  );
+  )
 }
