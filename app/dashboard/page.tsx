@@ -1,14 +1,12 @@
 "use client";
-import Dashboard from "./content";
-import { Footer } from "@/components/footer";
+import { SidebarDemo } from "./content";
 import { NavigationBar } from "@/components/navigation";
 
 const Home = () => {
   return (
     <div>
       <NavigationBar />
-      <Dashboard />
-      <Footer />
+      <SidebarDemo />
     </div>
   );
 };

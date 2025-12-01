@@ -32,7 +32,9 @@ export const WavyBackground = ({
 
   const bg = !mounted
     ? "transparent"
-    : backgroundFill || (theme === "dark" ? "#000" : "#ffffff");
+    : backgroundFill || theme === "dark"
+    ? "hsl(0 0% 3.9%)" // dark background from globals.css
+    : "hsl(0 0% 100%)";
 
   const textColor = !mounted
     ? ""

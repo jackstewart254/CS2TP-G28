@@ -11,10 +11,13 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { ThemeSwitcher } from "./theme-switcher";
 
 export function NavigationBar() {
+  const path = usePathname();
+  const showStyle = path === "/dashboard" || path === "/admin-dashboard";
   const router = useRouter();
   const navItems = [
     {
@@ -37,19 +40,17 @@ export function NavigationBar() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  useEffect(() => {
+    console.log(path);
+  }, [path]);
+
   return (
-    <Navbar className="">
+    <Navbar className={showStyle ? "border-b backdrop-blur-md" : ""}>
       <NavBody className="backdrop-blur-md">
         <NavbarLogo />
         <NavItems items={navItems} />
         <div className="flex items-center gap-4">
-          <NavbarButton
-            as="button"
-            variant="secondary"
-            onClick={() => router.push("/auth/login")}
-          >
-            Login
-          </NavbarButton>
+          <ThemeSwitcher />
 
           <NavbarButton
             as="button"
@@ -74,9 +75,9 @@ export function NavigationBar() {
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
         >
-          {navItems.map((item, idx) => (
+          {navItems.map((item, index) => (
             <a
-              key={`mobile-link-${idx}`}
+              key={`mobile-link-${index}`}
               href={item.link}
               onClick={() => setIsMobileMenuOpen(false)}
               className="relative text-neutral-600 dark:text-neutral-300"

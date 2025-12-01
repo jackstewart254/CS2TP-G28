@@ -80,16 +80,14 @@ export const TestimonialsRail = forwardRef<
         </div>
       </div>
 
-      {/* <div className="relative"> */}
-      <div className="">
+      <div>
         <InfiniteMovingCards
           items={testimonials}
           direction="right"
           speed="slow"
           pauseOnHover
-          allowManualScroll={false}
+          // allowManualScroll={false}
         />
-        {/* </div> */}
       </div>
     </section>
   );

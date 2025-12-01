@@ -73,14 +73,14 @@ export const InfiniteMovingCards = ({
     <div
       ref={containerRef}
       className={cn(
-        "scroller relative z-20 w-full overflow-hidden antialiased border  dark:border-white/10 dark:bg-black dark:bg-grid-white/[0.05] py-4",
+        "scroller relative z-20 w-full overflow-hidden antialiased   py-3",
         className
       )}
     >
       <ul
         ref={scrollerRef}
         className={cn(
-          "flex w-max min-w-full shrink-0 flex-nowrap gap-4 bg-transparent",
+          "flex w-max min-w-full shrink-0 flex-nowrap gap-3",
           start && "animate-scroll",
           pauseOnHover && "hover:[animation-play-state:paused]",
           className
@@ -89,7 +89,7 @@ export const InfiniteMovingCards = ({
         {[...items, ...items].map((item, idx) => (
           <li
             key={`${item.name}-${idx}`}
-            className="relative w-[320px] max-w-full shrink-0 rounded-3xl border border-neutral-200 bg-white/95 px-6 py-6 shadow-[0_15px_50px_rgba(15,23,42,0.12)] transition hover:-translate-y-1 md:w-[420px] dark:border-white/10 dark:bg-neutral-900/90 snap-start"
+            className="relative w-[320px] max-w-full shrink-0 rounded-3xl border   px-6 py-6 shadow-none transition hover:-translate-y-1 md:w-[420px]   snap-start"
           >
             <blockquote className="relative z-20">
               {(item.product || typeof item.rating === "number") && (
