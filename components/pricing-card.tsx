@@ -67,19 +67,19 @@ export function PricingBlock({
       onMouseEnter={handleCardEnter}
       onMouseLeave={handleCardLeave}
       className={cn(
-        "group relative flex h-full w-full flex-col overflow-hidden rounded-[28px] border p-1 transition-transform duration-300",
+        "group relative flex h-full w-full flex-col overflow-hidden rounded-[28px] border p-1 transition-transform duration-300 ",
         hovered
           ? "scale-[1.03] shadow-[0_35px_120px_rgba(0,0,0,0.25)]"
           : "scale-100 shadow-[0_20px_60px_rgba(0,0,0,0.12)]",
         "border-neutral-300 bg-white text-neutral-900 dark:border-white/15 dark:bg-neutral-950/90 dark:text-white"
       )}
     >
-      <div className="flex flex-1 flex-col rounded-[24px] bg-gradient-to-b from-neutral-50 to-neutral-100 p-6 dark:from-neutral-900 dark:to-neutral-950">
+      <div className="flex flex-1 flex-col rounded-[24px] bg-gradient-to-b from-neutral-50 to-neutral-100 p-6 dark:from-neutral-900 dark:to-neutral-950 ">
         <HoverImageContainer hovered={hovered}>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/25 via-purple-400/25 to-emerald-400/25 blur-3xl dark:from-blue-600/35 dark:via-purple-500/30 dark:to-emerald-500/35" />
-          <div className="absolute inset-x-6 bottom-6 space-y-3">
+          <div className="flex flex-col p-4 gap-3 h-full relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/25 via-purple-400/25 to-emerald-400/25 blur-3xl dark:from-blue-600/35 dark:via-purple-500/30 dark:to-emerald-500/35" />
             <p className="text-xl font-semibold">{title}</p>
-            <div className="flex items-end gap-1">
+            <div className="flex gap-1 w-full items-center">
               <span className="text-2xl font-semibold text-neutral-500 dark:text-white/70">
                 £
               </span>
@@ -153,7 +153,10 @@ export function PricingBlock({
                   <span>{rating.toFixed(1)}/5</span>
                 </div>
                 {features.slice(0, 2).map((feature, idx) => (
-                  <p key={idx} className="text-sm text-neutral-600 dark:text-white/70">
+                  <p
+                    key={idx}
+                    className="text-sm text-neutral-600 dark:text-white/70"
+                  >
                     {feature}
                   </p>
                 ))}
@@ -196,7 +199,7 @@ interface HoverImageContainerProps {
 
 function HoverImageContainer({ hovered, children }: HoverImageContainerProps) {
   return (
-    <div className="relative mb-4 h-52 overflow-hidden rounded-2xl bg-neutral-200 dark:bg-neutral-800">
+    <div className="relative overflow-hidden rounded-2xl bg-neutral-200 dark:bg-neutral-800">
       <div
         className={cn(
           "absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.4),_transparent_60%)] transition-transform duration-500",
@@ -261,8 +264,14 @@ function RatingStars({ value }: { value: number }) {
           >
             <defs>
               <linearGradient id="grad" x1="0%" x2="100%">
-                <stop offset={`${Math.max(Math.min(fill, 1), 0) * 100}%`} stopColor="#3b82f6" />
-                <stop offset={`${Math.max(Math.min(fill, 1), 0) * 100}%`} stopColor="transparent" />
+                <stop
+                  offset={`${Math.max(Math.min(fill, 1), 0) * 100}%`}
+                  stopColor="#3b82f6"
+                />
+                <stop
+                  offset={`${Math.max(Math.min(fill, 1), 0) * 100}%`}
+                  stopColor="transparent"
+                />
               </linearGradient>
             </defs>
             <path d="M12 3.5l2.6 5.27 5.8.85-4.2 4.09.99 5.79L12 16.77 6.81 19.5l.99-5.79-4.2-4.09 5.8-.85z" />

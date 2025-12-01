@@ -63,52 +63,35 @@ const testimonials = [
   },
 ];
 
-export const TestimonialsRail = forwardRef<HTMLDivElement, { className?: string }>(
-  ({ className }, ref) => {
-    return (
-      <section
-        ref={ref}
-        className={cn("w-full max-w-6xl space-y-6 px-4 md:px-0", className)}
-      >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.4em] text-neutral-500 dark:text-white/50">
-                  Why buyers choose us
-                </p>
-            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">
-              Real teams unlocking products
-            </h2>
-          </div>
-        </div>
-
-        <div className="relative">
-          <div className="rounded-3xl antialiased border border-neutral-200 bg-white/95 shadow-[0_15px_50px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-black dark:bg-grid-white/[0.05] py-10">
-            <InfiniteMovingCards
-              items={testimonials}
-              direction="right"
-              speed="slow"
-              pauseOnHover
-              allowManualScroll={false}
-              className="px-4"
-            />
-          </div>
-        </div>
-      </section>
-    );
-  }
-);
-TestimonialsRail.displayName = "TestimonialsRail";
-
-export function InfiniteMovingCardsDemo() {
+export const TestimonialsRail = forwardRef<
+  HTMLDivElement,
+  { className?: string }
+>(({ className }, ref) => {
   return (
-    <div className="rounded-md flex flex-col antialiased bg-white dark:bg-black dark:bg-grid-white/[0.05] items-center justify-center relative overflow-hidden py-8">
-      <InfiniteMovingCards
-        items={testimonials}
-        direction="right"
-        speed="slow"
-        pauseOnHover
-        allowManualScroll={false}
-      />
-    </div>
+    <section ref={ref} className={cn("w-full space-y-6  md:px-0", className)}>
+      <div className="flex items-center justify-center w-full">
+        <div className="flex flex-col items-center">
+          <p className="text-xs uppercase tracking-[0.4em] text-neutral-500 dark:text-white/50">
+            Why buyers choose us.
+          </p>
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">
+            Real teams unlocking products
+          </h2>
+        </div>
+      </div>
+
+      {/* <div className="relative"> */}
+      <div className="">
+        <InfiniteMovingCards
+          items={testimonials}
+          direction="right"
+          speed="slow"
+          pauseOnHover
+          allowManualScroll={false}
+        />
+        {/* </div> */}
+      </div>
+    </section>
   );
-}
+});
+TestimonialsRail.displayName = "TestimonialsRail";

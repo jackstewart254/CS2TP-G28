@@ -11,7 +11,10 @@ export default function Landing() {
   const testimonialsRef = useRef<HTMLDivElement>(null);
 
   const handleAdvisorClick = () => {
-    testimonialsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    testimonialsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   return (
@@ -25,15 +28,18 @@ export default function Landing() {
                 The Foundation of Workforce Intelligence
               </p>
               <p className="text-base md:text-lg mt-4 font-normal inter-var text-center mx-4 lg:mx-0">
-                Foundation Data transforms live job-market information into structured, accessible
-                insights on skills, roles, and demand—giving students, educators, and innovators the
-                data they need to build the future.
+                Foundation Data transforms live job-market information into
+                structured, accessible insights on skills, roles, and
+                demand—giving students, educators, and innovators the data they
+                need to build the future.
               </p>
             </WavyBackground>
           </div>
 
           <CardSpotlightCategories />
-          <TestimonialsRail ref={testimonialsRef} />
+          <div className="flex w-full items-center mb-16">
+            <TestimonialsRail ref={testimonialsRef} />
+          </div>
         </div>
         <Footer />
       </div>

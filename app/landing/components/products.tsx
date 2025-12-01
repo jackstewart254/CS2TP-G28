@@ -84,10 +84,8 @@ const categories = [
 ];
 
 export function CardSpotlightCategories() {
-  const featuredCategories = categories.slice(0, -1);
-  const highlightCategory = categories[categories.length - 1];
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
-    "monthly",
+    "monthly"
   );
 
   const isMonthly = billingCycle === "monthly";
@@ -126,7 +124,7 @@ export function CardSpotlightCategories() {
                 "rounded-full px-4 py-1.5 transition",
                 isMonthly
                   ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                  : "text-neutral-500 dark:text-white/60",
+                  : "text-neutral-500 dark:text-white/60"
               )}
               onClick={() => setBillingCycle("monthly")}
             >
@@ -138,7 +136,7 @@ export function CardSpotlightCategories() {
                 "rounded-full px-4 py-1.5 transition",
                 !isMonthly
                   ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                  : "text-neutral-500 dark:text-white/60",
+                  : "text-neutral-500 dark:text-white/60"
               )}
               onClick={() => setBillingCycle("yearly")}
             >
@@ -147,43 +145,24 @@ export function CardSpotlightCategories() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12 items-stretch justify-items-center">
-          {featuredCategories.map((cat) => (
-            <div key={cat.title} className="w-full h-full max-w-2xl">
-              <PricingBlock
-                title={cat.title}
-                price={isMonthly ? cat.priceMonthly : cat.priceYearly}
-                interval={isMonthly ? "/month" : "/year"}
-                buttonLabel="Subscribe"
-                href={`/payment?plan=${cat.id}`}
-                features={[cat.description]}
-                extras={cat.products.map((p) => p)}
-                rating={cat.rating}
-              />
-            </div>
-          ))}
-        </div>
-
-        {highlightCategory && (
-          <div className="flex w-full justify-center">
-            <div className="w-full h-full max-w-2xl">
-              <PricingBlock
-                title={highlightCategory.title}
-                price={
-                  isMonthly
-                    ? highlightCategory.priceMonthly
-                    : highlightCategory.priceYearly
-                }
-                interval={isMonthly ? "/month" : "/year"}
-                buttonLabel="Subscribe"
-                href={`/payment?plan=${highlightCategory.id}`}
-                features={[highlightCategory.description]}
-                extras={highlightCategory.products.map((p) => p)}
-                rating={highlightCategory.rating}
-              />
-            </div>
+        <div className="mx-auto w-full max-w-6xl gap-12  justify-items-center">
+          <div className="w-full grid lg:grid-cols-2 grid-cols-1 gap-12">
+            {categories.map((cat) => (
+              <div key={cat.title} className="w-full h-full max-w-2xl ">
+                <PricingBlock
+                  title={cat.title}
+                  price={isMonthly ? cat.priceMonthly : cat.priceYearly}
+                  interval={isMonthly ? "/month" : "/year"}
+                  buttonLabel="Subscribe"
+                  href={`/payment?plan=${cat.id}`}
+                  features={[cat.description]}
+                  extras={cat.products.map((p) => p)}
+                  rating={cat.rating}
+                />
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
