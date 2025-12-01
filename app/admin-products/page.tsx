@@ -1,13 +1,13 @@
 "use client";
 import { Footer } from "@/components/footer";
 import { NavigationBar } from "@/components/admin-navigation";
-import AdminDashboard from "./content";
+import AdminProducts from "./content";
 
 const Home = () => {
   return (
     <div>
       <NavigationBar />
-      <AdminDashboard />;
+      <AdminProducts />;
       <Footer />
     </div>
   );
