@@ -1,0 +1,43 @@
+1. useFetchCategories
+Description: Fetches all product categories from the database.
+Parameters: None
+Returns: { categories, loading, error }
+
+2. useFetchProducts
+Description: Fetches all products, optionally filtered by category.
+Parameters:
+- categoryId (optional): string
+Returns: { products, loading, error }
+
+3. useAddToCart
+Description: Adds a product to the logged-in user's cart.
+Parameters:
+- productId: string
+Returns: { success: boolean }, and exposes loading + error state
+
+4. useRemoveFromCart
+Description: Removes a product from the logged-in user's cart.
+Parameters:
+- productId: string
+Returns: { success: boolean }, and exposes loading + error state
+
+5. useFetchCart
+Description: Fetches all cart items for the logged-in user.
+Parameters: None
+Returns: { cartItems, loading, error }
+
+6. useCreateSubscription
+Description: Creates an active subscription for the logged-in user for a selected product.
+Parameters:
+- productId: string
+Returns: { success: boolean }, and exposes loading + error state
+
+7. useFetchSubscriptions
+Description: Fetches all subscriptions belonging to the logged-in user.
+Parameters: None
+Returns: { subscriptions, loading, error }
+
+8. useClearCart
+Description: Removes all items from the logged-in user's cart (usually after purchase).
+Parameters: None
+Returns: { success: boolean }, and exposes loading + error state
