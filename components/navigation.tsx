@@ -18,6 +18,10 @@ export function NavigationBar() {
   const router = useRouter();
   const navItems = [
     {
+      name: "About",
+      link: "/about",
+    },
+    {
       name: "Products",
       link: "/products",
     },
