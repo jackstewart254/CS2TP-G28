@@ -38,14 +38,6 @@ export function NavigationBar() {
       name: "Products",
       link: "/products",
     },
-    {
-      name: "About us",
-      link: "/about-us",
-    },
-    {
-      name: "Contact us",
-      link: "/contact-us",
-    },
   ];
 
   const navItems = [

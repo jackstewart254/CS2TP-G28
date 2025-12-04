@@ -86,13 +86,23 @@ export function Footer() {
             </h3>
             <ul className="space-y-2 text-neutral-600 dark:text-neutral-400">
               <li className="hover:text-neutral-900 dark:hover:text-white">
-                <span>About</span>
+                <Link
+                  href="/about"
+                  className="hover:text-neutral-900 dark:hover:text-white"
+                >
+                  About
+                </Link>
               </li>
               <li className="hover:text-neutral-900 dark:hover:text-white">
                 <span>Careers</span>
               </li>
               <li className="hover:text-neutral-900 dark:hover:text-white">
-                <span>Contact</span>
+                <Link
+                  href="/contact"
+                  className="hover:text-neutral-900 dark:hover:text-white"
+                >
+                  Contact
+                </Link>
               </li>
             </ul>
           </div>
