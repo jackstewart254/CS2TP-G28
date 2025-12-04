@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFetchProducts } from "@/lib/hooks/useFetchProducts";
 import { useFetchCategories } from "@/lib/hooks/useFetchCategories";
 
@@ -9,56 +9,203 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "../payment/components/ProductCard";
 import { PageLoader } from "@/components/page-loader";
 
-import { ChevronLeft, ChevronRight, UserRound } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { useFetchUser } from "@/lib/hooks/useFetchUser";
+import ColourfulText from "@/components/ui/colourful-text";
+import { useFetchCart } from "@/lib/hooks/useFetchCart";
+import { useRemoveFromCart } from "@/lib/hooks/useRemoveFromCart";
+import { useAddToCart } from "@/lib/hooks/useAddToCart";
+import { ShoppingCart } from "lucide-react";
+import { NumberTicker } from "@/components/ui/number-ticker";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
+  const [hovered, setHovered] = useState<number>();
+  const [showCart, setShowCart] = useState<boolean>(false);
+  const [hideCart, setHideCart] = useState<boolean>(true);
   const { products, loading } = useFetchProducts();
   const { categories, loading: catLoading } = useFetchCategories();
+  const { cartItems, refetch } = useFetchCart();
+  const { removeFromCart } = useRemoveFromCart();
+  const { addToCart, error } = useAddToCart();
   const {
     user: { fname },
     loading: userLoading,
   } = useFetchUser();
+
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      setHideCart(false);
+    } else {
+      setHideCart(true);
+    }
+  }, [cartItems]);
+
+  useEffect(() => {
+    if (!catLoading) {
+      setSelectedCategory(categories[0].id);
+    }
+  }, [categories]);
+
+  const checkCartPresence = (id: string) => {
+    console.log(cartItems);
+    const item = cartItems.find((c) => c.product_id === id);
+    console.log("cart presence", item);
+
+    if (item) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const renderCart = () => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.25 }}
+        className="
+        fixed bottom-28 right-10 z-[60]
+        w-72 max-h-[60vh]
+        bg-white dark:bg-neutral-900
+        border border-blue-400/40 
+        shadow-xl rounded-xl 
+        p-4 backdrop-blur
+        flex flex-col
+      "
+      >
+        <h2 className="font-semibold mb-3 text-lg">Your Cart</h2>
+        <Separator className="mb-3" />
+
+        {/* SCROLLABLE LIST AREA */}
+        <div className="flex-1 overflow-y-auto pr-1 no-scrollbar">
+          {cartItems.length === 0 ? (
+            <p className="text-neutral-500 text-sm">Your cart is empty</p>
+          ) : (
+            cartItems.map((item) => {
+              const cartItem = products.find((p) => p.id === item.product_id);
+
+              return (
+                <div key={item.id} className="mb-3">
+                  <p className="font-medium">{cartItem.name}</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    £{cartItem.price}
+                  </p>
+                  <Separator className="my-2" />
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* FOOTER BUTTON */}
+        <Button className="mt-4 w-full" disabled={!(cartItems.length > 0)}>
+          Checkout
+        </Button>
+      </motion.div>
+    );
+  };
+
+  const callAddToCard = async (cartItem: string) => {
+    const result = await addToCart(cartItem);
+
+    if (result.success) {
+      console.log("Added to cart!");
+      refetch(); // optional → refresh cart UI
+    } else {
+      console.log("Error:", error);
+    }
+  };
+
+  const callRemoveFromCart = async (cartItem: string) => {
+    await removeFromCart(cartItem);
+    refetch();
+  };
 
   if (loading || catLoading) {
     return <PageLoader text="Loading our products..." />;
   }
 
   return (
-    <div className="flex p-4 lg:p-10 w-full items-center justify-center">
+    <div className="flex p-4 lg:p-10 w-full items-center justify-center relative">
       <div className="flex flex-col max-w-7xl w-full gap-6">
-        <div className="">
-          <h1 className="text-3xl font-bold md:text-4xl">
-            Hey, {fname ? fname : "Stranger"}
-          </h1>
-        </div>
-        <ButtonGroup className="w-full grid grid-cols-5">
-          {categories.map((item, index) => {
+        <div
+          className="w-full grid grid-cols-5 gap-2"
+          onMouseLeave={() => setHovered(null)}
+        >
+          {categories.map((item) => {
+            const isSelected = selectedCategory === item.id;
+
             return (
-              <Button
-                variant="outline"
+              <div
                 key={item.id}
-                onClick={() => {
-                  setSelectedCategory(item.id);
-                }}
+                onMouseEnter={() => setSelectedCategory(item.id)}
+                className={cn(
+                  "relative px-4 py-2 text-sm font-medium cursor-pointer select-none",
+                  "flex items-center justify-center rounded-lg transition-all duration-300",
+                  isSelected
+                    ? "text-neutral-900 dark:text-white"
+                    : "text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
+                )}
               >
-                {item.name}
-              </Button>
+                {isSelected && (
+                  <motion.div
+                    layoutId="hovered"
+                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                    className="
+              absolute inset-0 h-full w-full rounded-xl
+              
+              border border-[#1e3a8a]/40
+              shadow-[0_0_10px_rgba(30,58,138,0.25)]
+            "
+                  />
+                )}
+
+                <span className="relative z-10">{item.name}</span>
+              </div>
             );
           })}
-        </ButtonGroup>
+        </div>
+
         <Separator />
         <div className="grid grid-cols-5 gap-4">
           {products
             .filter((p) => p.category_id === selectedCategory)
             .map((item) => {
               return (
-                <div key={item.id} className="w-full border rounded-xl p-4">
+                <div
+                  key={item.id}
+                  className="w-full border rounded-xl p-4 gap-4 flex flex-col"
+                >
+                  <div className="flex flex-col gap-4">
+                    <p className="text-base">
+                      £{item.price}{" "}
+                      <span className="font-semibold">{item.name}</span>
+                    </p>
+                    {checkCartPresence(item.id) === true ? (
+                      <Button
+                        className="w-full border-red-600"
+                        variant="outline"
+                        onClick={() => callRemoveFromCart(item.id)}
+                      >
+                        Remove from cart
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        disabled={checkCartPresence(item.id)}
+                        onClick={() => callAddToCard(item.id)}
+                      >
+                        Add to cart
+                      </Button>
+                    )}
+                  </div>
+
+                  <Separator />
                   <p className="leading-relaxed whitespace-pre-line">
                     {item.description}
                   </p>
@@ -67,6 +214,32 @@ const Products = () => {
             })}
         </div>
       </div>
+      {!hideCart && (
+        <>
+          {showCart && renderCart()}
+
+          <button
+            className="fixed z-50 bottom-10 right-10 p-4 rounded-full border border-blue-400 bg-white/80 dark:bg-neutral-900/80 shadow-lg backdrop-blur"
+            onClick={() => setShowCart(!showCart)}
+          >
+            <div
+              className="
+    absolute -top-2 -right-2 
+    bg-blue-600 text-white 
+    text-xs font-semibold 
+    h-6 min-w-6 px-2 
+    flex items-center justify-center 
+    rounded-full 
+    shadow-md
+  "
+            >
+              £{cartItems.length * 5}
+            </div>
+
+            <ShoppingCart />
+          </button>
+        </>
+      )}
     </div>
   );
 };

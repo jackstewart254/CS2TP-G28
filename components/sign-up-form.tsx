@@ -20,16 +20,28 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
+  const supabase = createClient();
+
+  const isFormValid =
+    fname.trim().length >= 2 &&
+    lname.trim().length >= 2 &&
+    email.length > 3 &&
+    password.length > 0 &&
+    repeatPassword === password;
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
@@ -40,17 +52,29 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/protected`,
         },
       });
-      if (error) throw error;
+
+      if (signUpError) throw signUpError;
+
+      // Insert user metadata into user_profiles
+      if (data.user) {
+        await supabase.from("user_profiles").insert({
+          id: data.user.id,
+          fname,
+          lname,
+          admin: false,
+        });
+      }
+
       router.push("/auth/sign-up-success");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +90,33 @@ export function SignUpForm({
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+              {/* First Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="fname">First Name</Label>
+                <Input
+                  id="fname"
+                  type="text"
+                  placeholder="John"
+                  required
+                  value={fname}
+                  onChange={(e) => setFname(e.target.value)}
+                />
+              </div>
+
+              {/* Last Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="lname">Last Name</Label>
+                <Input
+                  id="lname"
+                  type="text"
+                  placeholder="Doe"
+                  required
+                  value={lname}
+                  onChange={(e) => setLname(e.target.value)}
+                />
+              </div>
+
+              {/* Email */}
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -77,10 +128,10 @@ export function SignUpForm({
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
+
+              {/* Password */}
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -89,10 +140,10 @@ export function SignUpForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+
+              {/* Repeat Password */}
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
-                </div>
+                <Label htmlFor="repeat-password">Repeat Password</Label>
                 <Input
                   id="repeat-password"
                   type="password"
@@ -101,11 +152,18 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
+
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!isFormValid || isLoading}
+              >
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
+
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
               <Link href="/auth/login" className="underline underline-offset-4">

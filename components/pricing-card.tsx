@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { CustomPricingNote } from "./custom-pricing-note";
 import { Button } from "./ui/button";
+import { NumberTicker } from "./ui/number-ticker";
 
 interface PricingBlockProps {
   title: string;
@@ -84,7 +85,12 @@ export function PricingBlock({
               <span className="text-2xl font-semibold text-neutral-500 dark:text-white/70">
                 £
               </span>
-              <span className="text-6xl font-bold">{price}</span>
+              <span className="text-6xl font-bold">
+                <NumberTicker
+                  value={price}
+                  className="text-8xl font-medium tracking-tighter whitespace-pre-wrap text-black dark:text-white"
+                />
+              </span>
               <span className="pb-1 text-sm text-neutral-500 dark:text-white/70">
                 {interval}
               </span>
