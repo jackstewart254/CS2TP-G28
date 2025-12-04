@@ -1,365 +1,403 @@
-"use client";
+import { cn } from "@/lib/utils";
+import { useFetchUser } from "@/lib/hooks/useFetchUser";
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { SectionCard } from "../payment/components/sectionCard";
+import { SavedCard } from "@/lib/types/savedCards";
+import { CardErrors } from "@/lib/types/cardErrors";
+import { PageLoader } from "@/components/page-loader";
+import { Button } from "@/components/ui/button";
+import { InsertKey } from "@/lib/hooks/create/create-api";
+import { EventLoader } from "@/components/event-loader";
+import { toast } from "sonner";
 
-type UserMetadata = {
-  name: string;
-  email: string;
-  username: string;
-  phone: string;
-  notifications?: boolean;
-  language?: string;
-};
+const Account = () => {
+  const {
+    user: { email, fname, lname, apiKeys, cards },
+    loading,
+    error,
+    refetch,
+    insertCard,
+  } = useFetchUser();
 
-export default function Account() {
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
-
-  const [user, setUser] = useState<UserMetadata>({
-    name: "",
-    email: "",
-    username: "",
-    phone: "",
+  const [cardFormOpen, setCardFormOpen] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
+  const [newCard, setNewCard] = useState({
+    holder: "",
+    number: "",
+    expiry: "",
+    cvv: "",
+    brand: false,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [notifications, setNotifications] = useState(false);
-  const [language, setLanguage] = useState("en");
+  const [cardErrors, setCardErrors] = useState<CardErrors>({});
+  const [confirmAction, setConfirmAction] = useState<{
+    planId: string;
+    mode: "add" | "remove";
+  } | null>(null);
+  const [keyName, setKeyName] = useState<string>("");
+  const [addKey, setAddKey] = useState<boolean>(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  function markSuccess(message: string) {
-    setError(null);
-    setInfo(message);
-  }
+  const callInsertKey = async () => {
+    const id = EventLoader("Creating API key...");
 
-  function markFailure(message: string) {
-    setError(message);
-    setInfo(null);
-  }
-
-  async function loadUser() {
     try {
-      const res = await fetch("/api/account", { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Could not load user data");
-      }
-      setUser({
-        name: data.data?.name || "",
-        email: data.data?.email || "",
-        username: data.data?.username || "",
-        phone: data.data?.phone || "",
-      });
-      setNotifications(Boolean(data.data?.notifications));
-      setLanguage(data.data?.language || "en");
-      markSuccess(data.message || "Profile refreshed.");
-    } catch (err: any) {
-      markFailure(err.message || "Unable to load account details.");
+      await InsertKey({ name: keyName });
+      toast.success("API key created!");
+      setKeyName("");
+      setAddKey(false);
+    } catch (err) {
+      toast.error("Something went wrong creating your key.");
     } finally {
-      setLoading(false);
+      await refetch();
+      toast.dismiss(id);
     }
-  }
+  };
 
-  useEffect(() => {
-    loadUser();
-  }, []);
+  const isCardValid = () => {
+    const name = newCard.holder.trim();
 
-  function refresh() {
-    setLoading(true);
-    loadUser();
-  }
+    // NAME RULE: Two words, each 2+ characters
+    const nameParts = name.split(" ").filter(Boolean);
+    const nameValid =
+      nameParts.length >= 2 && nameParts.every((w) => w.length >= 1);
 
-  async function saveProfile() {
+    // CARD NUMBER RULE: 16 digits
+    const digits = newCard.number.replace(/\D/g, "");
+    const numberValid = digits.length === 16;
+
+    // EXPIRY RULE: must match MM/YY
+    const expiryValid = /^(0[1-9]|1[0-2])\/\d{2}$/.test(newCard.expiry);
+
+    // CVV RULE: at least 3 digits
+    const cvvValid = newCard.cvv.length >= 3;
+
+    return nameValid && numberValid && expiryValid && cvvValid;
+  };
+
+  const callSaveCard = async () => {
+    const id = EventLoader("Inserting bank card");
+
     try {
-      const res = await fetch("/api/account", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...user,
-          notifications,
-          language,
-        }),
+      await insertCard({
+        holder: newCard.holder,
+        card_number: newCard.number,
+        cvv: +newCard.cvv,
+        expiry: newCard.expiry,
+        provider: Math.random() < 0.5 ? "Visa" : "Mastercard",
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Unable to save profile.");
-      }
-      setUser({
-        name: data.data?.name || user.name,
-        email: data.data?.email || user.email,
-        username: data.data?.username || user.username,
-        phone: data.data?.phone || user.phone,
-      });
-      markSuccess(data.message || "Profile saved.");
-    } catch (err: any) {
-      markFailure(err.message || "Unable to save profile.");
+      setNewCard({ holder: "", number: "", expiry: "", cvv: "", brand: false });
+      setCardFormOpen(false);
+      toast.success("Bank card inserted successfully!");
+    } catch (err) {
+      toast.error("Something went wrong creating your key.");
+    } finally {
+      await refetch();
+      toast.dismiss(id);
     }
-  }
-
-  async function updatePassword() {
-    try {
-      if (!oldPassword || !newPassword || !confirmPassword) {
-        markFailure("Please complete all password fields.");
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        markFailure("New password and confirmation do not match.");
-        return;
-      }
-
-      const res = await fetch("/api/account/password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldPassword, newPassword, confirmPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Unable to update password.");
-      }
-      markSuccess(data.message || "Password updated.");
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err: any) {
-      markFailure(err.message || "Unable to update password.");
-    }
-  }
-
-  async function persistPreferences(update: Partial<{ notifications: boolean; language: string; theme: string }>) {
-    try {
-      const res = await fetch("/api/account/preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          notifications: update.notifications ?? notifications,
-          language: update.language ?? language,
-          theme: update.theme ?? (isDark ? "dark" : "light"),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Unable to update preferences.");
-      }
-      markSuccess(data.message || "Preferences updated.");
-    } catch (err: any) {
-      markFailure(err.message || "Unable to update preferences.");
-    }
-  }
-
-  function toggleDarkMode(value: boolean) {
-    setTheme(value ? "dark" : "light");
-    persistPreferences({ theme: value ? "dark" : "light" });
-  }
-
-  function toggleNotifications(value: boolean) {
-    setNotifications(value);
-    persistPreferences({ notifications: value });
-  }
-
-  function changeLanguage(value: string) {
-    setLanguage(value);
-    persistPreferences({ language: value });
-  }
-
-  async function deleteAccount() {
-    if (confirm("Are you sure you want to delete your account? This cannot be undone.")) {
-      try {
-        const res = await fetch("/api/account", { method: "DELETE" });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || "Unable to delete account.");
-        }
-        markSuccess(data.message || "Account deletion requested.");
-      } catch (err: any) {
-        markFailure(err.message || "Unable to delete account.");
-      }
-    }
-  }
-
-  function logout() {
-    window.location.href = "/auth";
-  }
+  };
 
   if (loading) {
-    return (
-      <div className="flex w-full h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
-        <p className="text-lg font-semibold text-slate-700 dark:text-slate-200">Loading account...</p>
-      </div>
-    );
+    return <PageLoader text="Loading your account..." />;
   }
 
+  // if (error) {
+  //   return (
+  //     <div className="flex h-[calc(100vh-53px)] items-center justify-center">
+  //       <p className="text-sm text-red-500">
+  //         There was a problem loading your account. Please try again.
+  //       </p>
+  //     </div>
+  //   );
+  // }
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex justify-center px-4 py-10">
-      <div className="w-full max-w-6xl space-y-8">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Account</p>
-            <h1 className="text-3xl font-bold">Profile</h1>
-            <p className="text-slate-600 dark:text-slate-300 mt-1">Manage your personal details and password.</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={refresh}
-              className="px-4 py-2 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              Refresh
-            </button>
-          </div>
-        </header>
+    <div
+      className={cn(
+        "flex w-full flex-1 items-center justify-center no-scrollbar",
+        "h-[calc(100vh-53px)]"
+      )}
+    >
+      <div className="w-full h-full max-w-7xl flex flex-col p-4 lg:p-10 overflow-auto no-scrollbar">
+        <div className="w-full flex flex-col gap-6">
+          <header className="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold md:text-4xl">Hey, {fname}</h1>
+              <p className="mt-2 text-neutral-600 dark:text-white/65">
+                Voilà! Here is your account overview.
+              </p>
+            </div>
+          </header>
 
-        {error && (
-          <div className="rounded-lg border border-amber-200 dark:border-amber-500/70 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-100">
-            {error}
-          </div>
-        )}
-
-        {info && !error && (
-          <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/70 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-100">
-            {info}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500 dark:text-slate-400">Profile Information</p>
-                <button
-                  onClick={saveProfile}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700"
-                >
-                  Save
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  placeholder="Name"
-                  value={user.name}
-                  onChange={(e) => setUser({ ...user, name: e.target.value })}
-                />
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  placeholder="Email"
-                  value={user.email}
-                  onChange={(e) => setUser({ ...user, email: e.target.value })}
-                />
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  placeholder="Username"
-                  value={user.username}
-                  onChange={(e) => setUser({ ...user, username: e.target.value })}
-                />
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  placeholder="Phone"
-                  value={user.phone}
-                  onChange={(e) => setUser({ ...user, phone: e.target.value })}
-                />
-              </div>
-            </section>
-
-            <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500 dark:text-slate-400">Change Password</p>
-                <button
-                  onClick={updatePassword}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700"
-                >
-                  Update
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  type="password"
-                  placeholder="Old password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                />
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  type="password"
-                  placeholder="New password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-                <input
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-            </section>
-          </div>
-
-          <div className="flex flex-col gap-6 h-full">
-            <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Account Settings</p>
-              <div className="space-y-3">
-                <label className="flex items-center justify-between text-sm">
-                  <span>Dark mode</span>
-                  <input
-                    type="checkbox"
-                    className="h-5 w-5 accent-blue-600"
-                    checked={isDark}
-                    onChange={(e) => toggleDarkMode(e.target.checked)}
-                  />
+          {/* Personal information */}
+          <SectionCard
+            title="Profile"
+            description="Basic information associated with your account."
+          >
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-muted-foreground mb-1">
+                  Email
                 </label>
-                <label className="flex items-center justify-between text-sm">
-                  <span>Notification settings</span>
-                  <input
-                    type="checkbox"
-                    className="h-5 w-5 accent-blue-600"
-                    checked={notifications}
-                    onChange={(e) => toggleNotifications(e.target.checked)}
-                  />
+                <Input
+                  value={email}
+                  disabled
+                  className="font-mono text-sm bg-muted/40"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-muted-foreground mb-1">
+                  First name
                 </label>
-                <div className="flex flex-col gap-1 text-sm">
-                  <span>Language</span>
-                  <select
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                    value={language}
-                    onChange={(e) => changeLanguage(e.target.value)}
+                <Input
+                  value={fname}
+                  disabled
+                  className="font-mono text-sm bg-muted/40"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-xs font-medium text-muted-foreground mb-1">
+                  Last name
+                </label>
+                <Input
+                  value={lname}
+                  disabled
+                  className="font-mono text-sm bg-muted/40"
+                />
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Two-column layout */}
+          <div className="w-full grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* Data API column */}
+            <div className="w-full flex flex-col gap-4">
+              <SectionCard
+                title="Data API"
+                description="Configure API keys to securely control access to your project."
+              >
+                <div className="flex flex-col gap-3">
+                  <button
+                    className="w-full rounded-xl border border-dashed border-neutral-300 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:border-blue-400 dark:border-white/15 dark:text-blue-300"
+                    onClick={() => setAddKey((v) => !v)}
                   >
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                  </select>
+                    {addKey ? "Cancel" : "New API key"}
+                  </button>
+
+                  <Separator />
+
+                  {apiKeys.length > 0 ? (
+                    <div className="flex flex-col gap-3">
+                      {apiKeys.map((item) => {
+                        const isCopied = copiedId === item.id;
+
+                        return (
+                          <div
+                            className="w-full flex items-end gap-3 p-4 border rounded-xl bg-muted/30"
+                            key={item.id}
+                          >
+                            <div className="flex flex-col w-1/3">
+                              <label className="text-xs font-medium text-muted-foreground mb-1">
+                                Name
+                              </label>
+                              <Input
+                                value={item.name}
+                                disabled
+                                className="font-mono text-sm bg-muted/40"
+                              />
+                            </div>
+
+                            <div className="flex flex-col flex-1">
+                              <label className="text-xs font-medium text-muted-foreground mb-1">
+                                API key
+                              </label>
+                              <Input
+                                value={item.key}
+                                disabled
+                                className="font-mono text-sm bg-muted/40"
+                              />
+                            </div>
+
+                            {isCopied ? (
+                              <Button
+                                disabled
+                                className="h-min flex items-center gap-1 rounded-lg"
+                              >
+                                ✓ Copied
+                              </Button>
+                            ) : (
+                              <Button
+                                className="h-min rounded-lg"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(item.key);
+                                  setCopiedId(item.id);
+                                  setTimeout(() => setCopiedId(null), 1000);
+                                }}
+                              >
+                                Copy
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      You don&apos;t have any API keys yet.
+                    </p>
+                  )}
                 </div>
-              </div>
-            </section>
+              </SectionCard>
 
-            <div className="flex-1" />
+              {addKey && (
+                <SectionCard title="Create data API key">
+                  <div className="flex flex-col w-full gap-3">
+                    <Input
+                      placeholder="Name your key (min. 3 characters)"
+                      value={keyName}
+                      onChange={(e) => setKeyName(e.target.value)}
+                    />
+                    <Button
+                      className="w-full"
+                      disabled={keyName.length < 3}
+                      onClick={callInsertKey}
+                    >
+                      Create key
+                    </Button>
+                  </div>
+                </SectionCard>
+              )}
+            </div>
 
-            <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-3">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Danger Zone</p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={deleteAccount}
-                  className="flex-1 rounded-md bg-red-500 text-white py-2 font-semibold shadow-sm hover:bg-red-600"
-                >
-                  Delete account
-                </button>
-                <button
-                  onClick={logout}
-                  className="flex-1 rounded-md border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 py-2 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  Logout
-                </button>
-              </div>
-            </section>
+            {/* Saved cards column */}
+            <div className="flex flex-col gap-4 w-full">
+              <SectionCard
+                title="Saved cards"
+                description="Tap a card to view or select."
+              >
+                <div className="space-y-3">
+                  {cards.map((card, idx) => {
+                    const active = idx === activeCardIndex;
+
+                    return (
+                      <button
+                        key={card.id}
+                        onClick={() => setActiveCardIndex(idx)}
+                        className={cn(
+                          "w-full rounded-2xl border px-4 py-3 text-left transition",
+                          active
+                            ? "border-blue-500 bg-blue-50/60 dark:border-blue-400 dark:bg-blue-400/10"
+                            : "border-neutral-200 bg-white hover:border-blue-300 dark:border-white/10 dark:bg-neutral-900/60"
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold">
+                              {card.provider +
+                                " **** " +
+                                String(card.card_number).slice(-4)}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-white/60">
+                              {card.holder} - Expires{" "}
+                              {card.expiry
+                                .replace(/\D/g, "")
+                                .slice(0, 4)
+                                .replace(/(\d{2})(\d{(1, 2)})/, "$1/$2")}
+                            </p>
+                          </div>
+                          {active && (
+                            <span className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white">
+                              Selected
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    className="w-full rounded-xl border border-dashed border-neutral-300 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:border-blue-400 dark:border-white/15 dark:text-blue-300"
+                    onClick={() => setCardFormOpen((v) => !v)}
+                  >
+                    {cardFormOpen ? "Close new card form" : "Use a new card"}
+                  </button>
+                </div>
+              </SectionCard>
+
+              {cardFormOpen && (
+                <SectionCard title="Add a new card">
+                  <div className="space-y-3">
+                    <Input
+                      value={newCard.holder}
+                      onChange={(e) =>
+                        setNewCard((c) => ({ ...c, holder: e.target.value }))
+                      }
+                      placeholder="Alex Johnson"
+                    />
+
+                    <Input
+                      value={newCard.number}
+                      onChange={(e) => {
+                        const digits = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 16);
+                        const grouped = digits.replace(/(.{4})/g, "$1 ").trim();
+                        setNewCard((c) => ({ ...c, number: grouped }));
+                      }}
+                      placeholder="4242 4242 4242 4242"
+                      inputMode="numeric"
+                    />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        value={newCard.expiry}
+                        onChange={(e) => {
+                          const digits = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 4);
+                          const withSlash =
+                            digits.length > 2
+                              ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+                              : digits;
+                          setNewCard((c) => ({ ...c, expiry: withSlash }));
+                        }}
+                        placeholder="MM/YY"
+                        inputMode="numeric"
+                      />
+
+                      <Input
+                        value={newCard.cvv}
+                        onChange={(e) => {
+                          const digits = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 3);
+                          setNewCard((c) => ({ ...c, cvv: digits }));
+                        }}
+                        placeholder="123"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <Button
+                      className="w-full"
+                      disabled={!isCardValid()}
+                      onClick={() => {
+                        callSaveCard();
+                      }}
+                    >
+                      Save card
+                    </Button>
+                  </div>
+                </SectionCard>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Account;

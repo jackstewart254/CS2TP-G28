@@ -18,10 +18,10 @@ export default function Landing() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center">
+    <main className="min-h-screen flex flex-col items-center ">
       <div className="flex-1 w-full flex flex-col items-center justify-center relative ">
         <NavigationBar />
-        <div className="w-full items-center justify-center flex flex-col gap-16">
+        <div className="w-full items-center justify-center flex flex-col gap-16 no-scrollbar">
           <div className="relative w-full h-[calc(100vh*0.8)] flex items-center justify-center overflow-clip">
             <WavyBackground>
               <p className="text-2xl md:text-4xl lg:text-7xl font-bold inter-var text-center mx-4 lg:mx-0">

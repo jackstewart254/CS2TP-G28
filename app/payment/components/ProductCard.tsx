@@ -48,7 +48,7 @@ export function ProductCard({
           £{price}
         </span>
       </div>
-      <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
+      <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed whitespace-pre-line">
         {description}
       </p>
     </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { CustomPricingNote } from "./custom-pricing-note";
+import { Button } from "./ui/button";
 
 interface PricingBlockProps {
   title: string;
@@ -177,12 +178,18 @@ export function PricingBlock({
                     />
                   ))}
                 </div>
-                <Link
+                {/* <Link
                   href={href}
                   className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(59,130,246,0.35)] transition hover:scale-[1.01]"
                 >
                   {buttonLabel}
-                </Link>
+                </Link> */}
+                <Button
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(59,130,246,0.35)] transition hover:scale-[1.01]"
+                  disabled
+                >
+                  {buttonLabel}
+                </Button>
               </div>
             </div>
           </div>

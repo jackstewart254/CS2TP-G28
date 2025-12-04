@@ -1,8 +1,14 @@
 ﻿"use client";
 
-import { useMemo, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  useMemo,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { cards } from "./components/initialCards";
 
 type BillingInterval = "monthly" | "annual";
 
@@ -17,7 +23,12 @@ type Plan = {
 
 type SavedCard = { label: string; name: string; exp: string; brand: string };
 
-type CardErrors = { name?: string; number?: string; exp?: string; cvc?: string };
+type CardErrors = {
+  name?: string;
+  number?: string;
+  exp?: string;
+  cvc?: string;
+};
 
 const plans: Plan[] = [
   {
@@ -53,7 +64,8 @@ const plans: Plan[] = [
     name: "Student Career Tools",
     priceMonthly: 25,
     priceAnnual: 250,
-    description: "Tools that help students navigate the job market with clarity.",
+    description:
+      "Tools that help students navigate the job market with clarity.",
     features: [
       "Career Match Quiz",
       "Skill Gap Checker",
@@ -93,39 +105,60 @@ const plans: Plan[] = [
 ];
 
 const addOns = [
-  { name: "Daily data refresh", price: 10, description: "24h ingestion cycles and freshness guarantees." },
-  { name: "Priority support", price: 4, description: "Faster responses with shared Slack channel access." },
+  {
+    name: "Daily data refresh",
+    price: 10,
+    description: "24h ingestion cycles and freshness guarantees.",
+  },
+  {
+    name: "Priority support",
+    price: 4,
+    description: "Faster responses with shared Slack channel access.",
+  },
 ];
 
-const initialCards: SavedCard[] = [
-  { label: "Visa **** 4242", name: "Alex Johnson", exp: "12/28", brand: "Visa" },
-  { label: "Mastercard **** 9921", name: "Jamie Lee", exp: "08/27", brand: "Mastercard" },
-  { label: "Amex **** 3014", name: "Taylor Smith", exp: "03/29", brand: "Amex" },
-];
+const initialCards: SavedCard[] = cards();
 
 export default function Payment() {
   const searchParams = useSearchParams();
   const initialPlanId = useMemo(() => {
     const planParam = searchParams.get("plan");
-    return planParam && plans.some((p) => p.id === planParam) ? planParam : null;
+    return planParam && plans.some((p) => p.id === planParam)
+      ? planParam
+      : null;
   }, [searchParams]);
 
   const [interval, setInterval] = useState<BillingInterval>("monthly");
   const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>(() =>
-    initialPlanId ? [initialPlanId] : [],
+    initialPlanId ? [initialPlanId] : []
   );
   const [showAvailable, setShowAvailable] = useState(true);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [cardFormOpen, setCardFormOpen] = useState(false);
   const [savedCards, setSavedCards] = useState<SavedCard[]>(initialCards);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
-  const [newCard, setNewCard] = useState({ name: "", number: "", exp: "", cvc: "", brand: "Visa" });
+  const [newCard, setNewCard] = useState({
+    name: "",
+    number: "",
+    exp: "",
+    cvc: "",
+    brand: "Visa",
+  });
   const [cardErrors, setCardErrors] = useState<CardErrors>({});
-  const [confirmAction, setConfirmAction] = useState<{ planId: string; mode: "add" | "remove" } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    planId: string;
+    mode: "add" | "remove";
+  } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const selectedPlans = useMemo(() => plans.filter((p) => selectedPlanIds.includes(p.id)), [selectedPlanIds]);
-  const availablePlans = useMemo(() => plans.filter((p) => !selectedPlanIds.includes(p.id)), [selectedPlanIds]);
+  const selectedPlans = useMemo(
+    () => plans.filter((p) => selectedPlanIds.includes(p.id)),
+    [selectedPlanIds]
+  );
+  const availablePlans = useMemo(
+    () => plans.filter((p) => !selectedPlanIds.includes(p.id)),
+    [selectedPlanIds]
+  );
 
   const togglePlan = (planId: string, mode: "add" | "remove") => {
     setConfirmAction({ planId, mode });
@@ -137,7 +170,9 @@ export default function Payment() {
       setSelectedPlanIds((prev) => [...prev, confirmAction.planId]);
       setMessage("Plan added to basket.");
     } else {
-      setSelectedPlanIds((prev) => prev.filter((id) => id !== confirmAction.planId));
+      setSelectedPlanIds((prev) =>
+        prev.filter((id) => id !== confirmAction.planId)
+      );
       setMessage("Plan removed from basket.");
     }
     setConfirmAction(null);
@@ -145,14 +180,17 @@ export default function Payment() {
   };
 
   const toggleAddOn = (name: string) => {
-    setSelectedAddOns((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+    setSelectedAddOns((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
   };
 
   const validateCard = () => {
     const errors: CardErrors = {};
     if (!newCard.name.trim()) errors.name = "Name required";
     const numberDigits = newCard.number.replace(/\D/g, "");
-    if (numberDigits.length < 13 || numberDigits.length > 19) errors.number = "Enter 13-19 digits";
+    if (numberDigits.length < 13 || numberDigits.length > 19)
+      errors.number = "Enter 13-19 digits";
     const expDigits = newCard.exp.replace(/\D/g, "");
     if (expDigits.length !== 4) errors.exp = "MM/YY";
     if (expDigits.length === 4) {
@@ -165,22 +203,12 @@ export default function Payment() {
     return Object.keys(errors).length === 0;
   };
 
-  const saveNewCard = () => {
-    if (!validateCard()) return;
-    const last4 = newCard.number.replace(/\D/g, "").slice(-4);
-    const label = `${newCard.brand} **** ${last4}`;
-    const entry: SavedCard = { label, name: newCard.name.trim(), exp: newCard.exp, brand: newCard.brand };
-    setSavedCards((prev) => [...prev, entry]);
-    setActiveCardIndex(savedCards.length);
-    setNewCard({ name: "", number: "", exp: "", cvc: "", brand: "Visa" });
-    setCardFormOpen(false);
-    setMessage("Card saved.");
-    setTimeout(() => setMessage(null), 2200);
-  };
+
 
   const total = useMemo(() => {
     const planTotal = selectedPlans.reduce(
-      (sum, p) => sum + (interval === "monthly" ? p.priceMonthly : p.priceAnnual),
+      (sum, p) =>
+        sum + (interval === "monthly" ? p.priceMonthly : p.priceAnnual),
       0
     );
     const addOnTotal = selectedAddOns.reduce((sum, name) => {
@@ -191,26 +219,46 @@ export default function Payment() {
   }, [interval, selectedPlans, selectedAddOns]);
 
   const formatPrice = (amount: number) => `\u00a3${amount.toFixed(0)}`;
-  const savingsPercent = 100 - Math.round((plans[0].priceAnnual / (plans[0].priceMonthly * 12)) * 100);
+  const savingsPercent =
+    100 -
+    Math.round((plans[0].priceAnnual / (plans[0].priceMonthly * 12)) * 100);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-10">
       <header className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.25em] text-neutral-500 dark:text-white/50">Checkout</p>
-          <h1 className="text-3xl font-bold md:text-4xl">Complete your selection</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-neutral-500 dark:text-white/50">
+            Checkout
+          </p>
+          <h1 className="text-3xl font-bold md:text-4xl">
+            Complete your selection
+          </h1>
           <p className="mt-2 text-neutral-600 dark:text-white/65">
             Choose packs, add-ons, and confirm payment details.
           </p>
         </div>
         <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white/80 px-3 py-2 shadow-sm backdrop-blur dark:border-white/10 dark:bg-neutral-900/70">
-          <span className={cn("cursor-pointer rounded-xl px-3 py-1 text-sm", interval === "monthly" && "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900")} onClick={() => setInterval("monthly")}>
+          <span
+            className={cn(
+              "cursor-pointer rounded-xl px-3 py-1 text-sm",
+              interval === "monthly" &&
+                "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+            )}
+            onClick={() => setInterval("monthly")}
+          >
             Monthly
           </span>
           <span className="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
             Save {savingsPercent}% annually
           </span>
-          <span className={cn("cursor-pointer rounded-xl px-3 py-1 text-sm", interval === "annual" && "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900")} onClick={() => setInterval("annual")}>
+          <span
+            className={cn(
+              "cursor-pointer rounded-xl px-3 py-1 text-sm",
+              interval === "annual" &&
+                "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+            )}
+            onClick={() => setInterval("annual")}
+          >
             Annual
           </span>
         </div>
@@ -218,9 +266,14 @@ export default function Payment() {
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr,0.9fr]">
         <div className="space-y-6">
-          <SectionCard title="Selected products" description="Plans added to your basket.">
+          <SectionCard
+            title="Selected products"
+            description="Plans added to your basket."
+          >
             {selectedPlans.length === 0 ? (
-              <p className="text-sm text-neutral-500 dark:text-white/60">No plans selected yet.</p>
+              <p className="text-sm text-neutral-500 dark:text-white/60">
+                No plans selected yet.
+              </p>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {selectedPlans.map((plan) => (
@@ -264,11 +317,16 @@ export default function Payment() {
               </div>
             )}
             {!showAvailable && (
-              <p className="text-sm text-neutral-500 dark:text-white/60">Available packs hidden.</p>
+              <p className="text-sm text-neutral-500 dark:text-white/60">
+                Available packs hidden.
+              </p>
             )}
           </SectionCard>
 
-          <SectionCard title="Optional add-ons" description="Enhance your plan with extras.">
+          <SectionCard
+            title="Optional add-ons"
+            description="Enhance your plan with extras."
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               {addOns.map((addOn) => {
                 const active = selectedAddOns.includes(addOn.name);
@@ -285,7 +343,9 @@ export default function Payment() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-base font-semibold">{addOn.name}</p>
-                        <p className="text-sm text-neutral-500 dark:text-white/60">{addOn.description}</p>
+                        <p className="text-sm text-neutral-500 dark:text-white/60">
+                          {addOn.description}
+                        </p>
                       </div>
                       <span className="rounded-full bg-blue-600 px-3 py-1 text-sm font-semibold text-white shadow-sm transition dark:bg-blue-500">
                         {"\u00a3"}
@@ -312,30 +372,45 @@ export default function Payment() {
         </div>
 
         <div className="space-y-6">
-          <SectionCard title="Order summary" description="Review your selection before checkout.">
+          <SectionCard
+            title="Order summary"
+            description="Review your selection before checkout."
+          >
             <div className="space-y-3">
               {selectedPlans.length === 0 && (
-                <p className="text-sm text-neutral-500 dark:text-white/60">Add at least one plan to continue.</p>
+                <p className="text-sm text-neutral-500 dark:text-white/60">
+                  Add at least one plan to continue.
+                </p>
               )}
               {selectedPlans.map((plan) => (
                 <LineItem
                   key={plan.id}
                   label={plan.name}
-                  price={interval === "monthly" ? plan.priceMonthly : plan.priceAnnual}
+                  price={
+                    interval === "monthly"
+                      ? plan.priceMonthly
+                      : plan.priceAnnual
+                  }
                   interval={interval}
                 />
               ))}
               {selectedAddOns.map((name) => {
                 const addOn = addOns.find((a) => a.name === name);
                 if (!addOn) return null;
-                return <LineItem key={name} label={addOn.name} price={addOn.price} />;
+                return (
+                  <LineItem key={name} label={addOn.name} price={addOn.price} />
+                );
               })}
               <div className="mt-4 border-t border-dashed border-neutral-200 pt-4 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600 dark:text-white/70">Total</span>
+                  <span className="text-sm text-neutral-600 dark:text-white/70">
+                    Total
+                  </span>
                   <div className="text-right">
                     <p className="text-xl font-bold">{formatPrice(total)}</p>
-                    <p className="text-xs text-neutral-500 dark:text-white/60">Excludes taxes</p>
+                    <p className="text-xs text-neutral-500 dark:text-white/60">
+                      Excludes taxes
+                    </p>
                   </div>
                 </div>
               </div>
@@ -347,14 +422,19 @@ export default function Payment() {
                     ? "cursor-not-allowed bg-neutral-300 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
                     : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:shadow-[0_18px_40px_rgba(59,130,246,0.35)]"
                 )}
-                onClick={() => setMessage("Checkout is front-end only in this prototype.")}
+                onClick={() =>
+                  setMessage("Checkout is front-end only in this prototype.")
+                }
               >
                 Proceed to checkout
               </button>
             </div>
           </SectionCard>
 
-          <SectionCard title="Saved cards" description="Tap a card to view or select.">
+          <SectionCard
+            title="Saved cards"
+            description="Tap a card to view or select."
+          >
             <div className="space-y-3">
               {savedCards.map((card, idx) => {
                 const active = idx === activeCardIndex;
@@ -400,7 +480,9 @@ export default function Payment() {
                 <Input
                   label="Cardholder name"
                   value={newCard.name}
-                  onChange={(e) => setNewCard((c) => ({ ...c, name: e.target.value }))}
+                  onChange={(e) =>
+                    setNewCard((c) => ({ ...c, name: e.target.value }))
+                  }
                   error={cardErrors.name}
                   placeholder="Alex Johnson"
                 />
@@ -408,7 +490,9 @@ export default function Payment() {
                   label="Card number"
                   value={newCard.number}
                   onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, "").slice(0, 19);
+                    const digits = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 19);
                     const grouped = digits.replace(/(.{4})/g, "$1 ").trim();
                     setNewCard((c) => ({ ...c, number: grouped }));
                   }}
@@ -421,8 +505,13 @@ export default function Payment() {
                     label="Expiry"
                     value={newCard.exp}
                     onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
-                      const withSlash = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+                      const digits = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 4);
+                      const withSlash =
+                        digits.length > 2
+                          ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+                          : digits;
                       setNewCard((c) => ({ ...c, exp: withSlash }));
                     }}
                     error={cardErrors.exp}
@@ -433,7 +522,9 @@ export default function Payment() {
                     label="CVC"
                     value={newCard.cvc}
                     onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+                      const digits = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 4);
                       setNewCard((c) => ({ ...c, cvc: digits }));
                     }}
                     error={cardErrors.cvc}
@@ -471,7 +562,11 @@ export default function Payment() {
 
       {confirmAction && (
         <Modal
-          title={confirmAction.mode === "add" ? "Add plan to basket?" : "Remove plan from basket?"}
+          title={
+            confirmAction.mode === "add"
+              ? "Add plan to basket?"
+              : "Remove plan from basket?"
+          }
           onCancel={() => setConfirmAction(null)}
           onConfirm={confirmPlanAction}
           confirmLabel={confirmAction.mode === "add" ? "Add" : "Remove"}
@@ -506,8 +601,14 @@ function SectionCard({
     <div className="rounded-3xl border border-neutral-200 bg-white/90 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.06)] backdrop-blur dark:border-white/10 dark:bg-neutral-900/70">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-neutral-500 dark:text-white/50">{title}</p>
-          {description && <p className="text-sm text-neutral-600 dark:text-white/65">{description}</p>}
+          <p className="text-xs uppercase tracking-[0.25em] text-neutral-500 dark:text-white/50">
+            {title}
+          </p>
+          {description && (
+            <p className="text-sm text-neutral-600 dark:text-white/65">
+              {description}
+            </p>
+          )}
         </div>
         {action}
       </div>
@@ -536,8 +637,7 @@ function PlanCard({
       className={cn(
         "flex h-full flex-col rounded-2xl border p-5 shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition",
         "bg-white text-neutral-900 border-neutral-200",
-        "dark:bg-neutral-900 dark:text-white dark:border-white/10"
-      ,
+        "dark:bg-neutral-900 dark:text-white dark:border-white/10",
         isSelected &&
           "border-blue-600 shadow-[0_25px_70px_rgba(37,99,235,0.25)] ring-1 ring-blue-300/70 dark:border-blue-400 dark:ring-blue-400/50"
       )}
@@ -548,7 +648,10 @@ function PlanCard({
       <h3 className="mt-1 text-xl font-semibold">{plan.name}</h3>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {plan.features.map((feature) => (
-          <div key={feature} className="flex items-start gap-2 text-sm leading-snug">
+          <div
+            key={feature}
+            className="flex items-start gap-2 text-sm leading-snug"
+          >
             <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-400" />
             <span>{feature}</span>
           </div>
@@ -556,7 +659,9 @@ function PlanCard({
       </div>
       <div className="mt-5 flex items-center justify-between gap-3">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-semibold text-neutral-700 dark:text-white/70">{"\u00a3"}</span>
+          <span className="text-sm font-semibold text-neutral-700 dark:text-white/70">
+            {"\u00a3"}
+          </span>
           <span className="text-3xl font-bold">{price}</span>
           <span className="text-xs text-neutral-500 dark:text-white/60">
             {interval === "monthly" ? "/month" : "/year"}
@@ -578,11 +683,21 @@ function PlanCard({
   );
 }
 
-function LineItem({ label, price, interval }: { label: string; price: number; interval?: BillingInterval }) {
+function LineItem({
+  label,
+  price,
+  interval,
+}: {
+  label: string;
+  price: number;
+  interval?: BillingInterval;
+}) {
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="text-neutral-700 dark:text-white/75">{label}</span>
-      <span className="font-semibold text-neutral-900 dark:text-white">{"\u00a3"}{price}
+      <span className="font-semibold text-neutral-900 dark:text-white">
+        {"\u00a3"}
+        {price}
         {interval === "monthly" && " /mo"}
         {interval === "annual" && " /yr"}
       </span>
@@ -607,7 +722,9 @@ function Input({
             : "border-neutral-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-white/10 dark:bg-neutral-900/80 dark:focus:ring-blue-400/30"
         )}
       />
-      {error && <span className="mt-1 block text-xs text-red-500">{error}</span>}
+      {error && (
+        <span className="mt-1 block text-xs text-red-500">{error}</span>
+      )}
     </label>
   );
 }
@@ -627,7 +744,9 @@ function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-neutral-900">
         <h3 className="text-lg font-semibold">{title}</h3>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-white/65">Please confirm this action.</p>
+        <p className="mt-2 text-sm text-neutral-600 dark:text-white/65">
+          Please confirm this action.
+        </p>
         <div className="mt-4 flex justify-end gap-3">
           <button
             onClick={onCancel}
@@ -646,25 +765,3 @@ function Modal({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

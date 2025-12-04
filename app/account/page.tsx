@@ -8,7 +8,6 @@ const AccountPage = () => {
     <div>
       <NavigationBar />
       <Account />
-      <Footer />
     </div>
   );
 };

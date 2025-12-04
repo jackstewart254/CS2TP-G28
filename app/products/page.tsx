@@ -6,7 +6,7 @@ import Products from "./content";
 
 export default function ProductsPage() {
   return (
-    <div>
+    <div className="no-scrollbar">
       <NavigationBar />
       <Products />
       <Footer />

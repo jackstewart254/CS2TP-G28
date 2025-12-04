@@ -14,11 +14,40 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeSwitcher } from "./theme-switcher";
+import { useCheckUser } from "@/lib/hooks/useCheckUser";
+import { LogoutButton } from "./logout-button";
 
 export function NavigationBar() {
+  const {
+    user: { name, valid, admin },
+    loading,
+    error,
+  } = useCheckUser();
+
+  console.log("valid", valid);
+
+  console.log("admin", admin);
   const path = usePathname();
-  const showStyle = path === "/dashboard" || path === "/admin-dashboard";
+  const showStyle =
+    path === "/dashboard" || path === "/admin-dashboard" || path === "/account";
+
   const router = useRouter();
+
+  const guestNavItems = [
+    {
+      name: "Products",
+      link: "/products",
+    },
+    {
+      name: "About us",
+      link: "/about-us",
+    },
+    {
+      name: "Contact us",
+      link: "/contact-us",
+    },
+  ];
+
   const navItems = [
     {
       name: "Products",
@@ -28,8 +57,21 @@ export function NavigationBar() {
       name: "Dashboard",
       link: "/dashboard",
     },
+
     {
-      name: "Admin",
+      name: "Account",
+      link: "/account",
+    },
+  ];
+
+  const adminNavItems = [
+    {
+      name: "Products",
+      link: "/products",
+    },
+
+    {
+      name: "dashboard",
       link: "/admin-dashboard",
     },
     {
@@ -40,25 +82,29 @@ export function NavigationBar() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    console.log(path);
-  }, [path]);
-
   return (
     <Navbar className={showStyle ? "border-b backdrop-blur-md" : ""}>
       <NavBody className="backdrop-blur-md">
         <NavbarLogo />
-        <NavItems items={navItems} />
+        <NavItems
+          items={
+            valid ? (admin === true ? adminNavItems : navItems) : guestNavItems
+          }
+        />
         <div className="flex items-center gap-4">
           <ThemeSwitcher />
 
-          <NavbarButton
-            as="button"
-            variant="primary"
-            onClick={() => router.push("/auth/sign-up")}
-          >
-            Signup
-          </NavbarButton>
+          {valid ? (
+            <LogoutButton />
+          ) : (
+            <NavbarButton
+              as="button"
+              variant="primary"
+              onClick={() => router.push("/auth/sign-up")}
+            >
+              Signup
+            </NavbarButton>
+          )}
         </div>
       </NavBody>
 

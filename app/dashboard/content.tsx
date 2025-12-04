@@ -3,8 +3,18 @@ import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { LayoutDashboard, UserCog, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFetchProducts } from "@/lib/hooks/useFetchProducts";
+import { PageLoader } from "@/components/page-loader";
+import { useFetchCategories } from "@/lib/hooks/useFetchCategories";
 
 export function SidebarDemo() {
+  const { products, loading, error } = useFetchProducts();
+  const {
+    categories,
+    loading: categoryLoading,
+    error: categoryError,
+  } = useFetchCategories();
+
   const links = [
     {
       label: "Dashboard",
@@ -36,6 +46,10 @@ export function SidebarDemo() {
     },
   ];
   const [open, setOpen] = useState(false);
+
+  if (loading || categoryLoading) {
+    return <PageLoader text="Loading your Dashboard..." />;
+  }
   return (
     <div
       className={cn(
@@ -59,7 +73,6 @@ export function SidebarDemo() {
   );
 }
 
-// Dummy dashboard component with content
 const Dashboard = () => {
   return (
     <div className="flex flex-1">
