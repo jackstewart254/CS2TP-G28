@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
-
-
-
 @layer base {
   :root {
     /* BASE BACKGROUND + SURFACES (FROM BOTTOM THEME) */
