@@ -136,7 +136,6 @@ const Products = () => {
         <p className="leading-relaxed whitespace-pre-line">
           {item.description}
         </p>
-        <p>User stories</p>
       </div>
     );
   };
@@ -177,33 +176,40 @@ const Products = () => {
   return (
     <div className="flex p-4 lg:p-10 w-full items-center justify-center relative">
       <div className="flex flex-col max-w-7xl w-full gap-6">
-        <div className="w-full flex flex-col gap-2 py-6 items-center text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-neutral-900 dark:text-white">
-            Our Products
-          </h1>
-          <p className="text-neutral-600 dark:text-neutral-400 max-w-xl">
-            Hand-crafted items tailored for your needs. Explore our categories
-            to discover more.
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-3 flex-wrap">
+        <div
+          className="w-full grid grid-cols-5 gap-2"
+          onMouseLeave={() => setHovered(null)}
+        >
           {categories.map((item) => {
             const isSelected = selectedCategory === item.id;
 
             return (
-              <button
+              <div
                 key={item.id}
                 onMouseEnter={() => setSelectedCategory(item.id)}
                 className={cn(
-                  "relative px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                  "relative px-4 py-2 text-sm font-medium cursor-pointer select-none",
+                  "flex items-center justify-center rounded-lg transition-all duration-300",
                   isSelected
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    ? "text-neutral-900 dark:text-white"
+                    : "text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
                 )}
               >
-                {item.name}
-              </button>
+                {isSelected && (
+                  <motion.div
+                    layoutId="hovered"
+                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                    className="
+              absolute inset-0 h-full w-full rounded-xl
+              
+              border border-[#1e3a8a]/40
+              shadow-[0_0_10px_rgba(30,58,138,0.25)]
+            "
+                  />
+                )}
+
+                <span className="relative z-10">{item.name}</span>
+              </div>
             );
           })}
         </div>

@@ -17,27 +17,15 @@ import { ThemeSwitcher } from "./theme-switcher";
 import { useCheckUser } from "@/lib/hooks/useCheckUser";
 import { LogoutButton } from "./logout-button";
 
-export function NavigationBar() {
+export function DashboardNavigationBar() {
   const {
     user: { name, valid, admin, id },
     loading,
     error,
   } = useCheckUser();
 
-  console.log("valid", valid);
-
-  console.log("admin", admin);
   const path = usePathname();
   const showStyle = path !== "/" && path !== "/products";
-
-  const router = useRouter();
-
-  const guestNavItems = [
-    {
-      name: "Products",
-      link: "/products",
-    },
-  ];
 
   const navItems = [
     {
@@ -53,28 +41,12 @@ export function NavigationBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <Navbar
-      className={showStyle ? "border-b backdrop-blur-md h-[52px]" : "h-[52px]"}
-    >
-      <NavBody className="backdrop-blur-md h-[52px]">
+    <Navbar className={showStyle ? "border-b backdrop-blur-md" : ""}>
+      <NavBody className="backdrop-blur-md">
         <NavbarLogo />
-        <NavItems
-          items={
-            valid ? (admin === true ? adminNavItems : navItems) : guestNavItems
-          }
-        />
+        <NavItems items={navItems} />
         <div className="flex items-center gap-4">
           <ThemeSwitcher />
-
-          {!valid && (
-            <NavbarButton
-              as="button"
-              variant="primary"
-              onClick={() => router.push("/auth/sign-up")}
-            >
-              Signup
-            </NavbarButton>
-          )}
         </div>
       </NavBody>
 

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { InsertKey } from "@/lib/hooks/create/create-api";
 import { EventLoader } from "@/components/event-loader";
 import { toast } from "sonner";
+import { LogoutButton } from "@/components/logout-button";
 
 const Account = () => {
   const {
@@ -168,6 +169,7 @@ const Account = () => {
                   className="font-mono text-sm bg-muted/40"
                 />
               </div>
+              <LogoutButton />
             </div>
           </SectionCard>
 

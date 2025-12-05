@@ -1,13 +1,20 @@
 "use client";
-import React, { useState } from "react";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LayoutDashboard, UserCog, Settings, LogOut } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useFetchProducts } from "@/lib/hooks/useFetchProducts";
 import { PageLoader } from "@/components/page-loader";
+import { Content } from "./dashboard";
+import { SidebarBody, SidebarLink, SidebarProvider } from "@/components/ui/sidebar";
 import { useFetchCategories } from "@/lib/hooks/useFetchCategories";
+import { useFetchProducts } from "@/lib/hooks/useFetchProducts";
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Sidebar,
+  UserCog,
+} from "lucide-react";
+import { useState } from "react";
 
-export function SidebarDemo() {
+export function SidebarBase() {
   const { products, loading, error } = useFetchProducts();
   const {
     categories,
@@ -68,32 +75,7 @@ export function SidebarDemo() {
           </div>
         </SidebarBody>
       </Sidebar>
-      <Dashboard />
+      <Content />
     </div>
   );
 }
-
-const Dashboard = () => {
-  return (
-    <div className="flex flex-1">
-      <div className="p-2 md:p-10 border-l flex flex-col gap-2 flex-1 w-full h-full">
-        <div className="flex gap-2">
-          {[...new Array(4)].map((i) => (
-            <div
-              key={"first-array" + i}
-              className="h-20 w-full rounded-lg  bg-gray-100 dark:bg-neutral-800 animate-pulse"
-            ></div>
-          ))}
-        </div>
-        <div className="flex gap-2 flex-1">
-          {[...new Array(2)].map((i) => (
-            <div
-              key={"second-array" + i}
-              className="h-full w-full rounded-lg  bg-gray-100 dark:bg-neutral-800 animate-pulse"
-            ></div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};

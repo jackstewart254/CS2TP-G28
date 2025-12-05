@@ -1,12 +1,11 @@
-"use client";
-import { SidebarDemo } from "./content";
 import { NavigationBar } from "@/components/navigation";
+import DashboardSidebar from "./content";
 
 const Home = () => {
   return (
     <div>
       <NavigationBar />
-      <SidebarDemo />
+      <DashboardSidebar />
     </div>
   );
 };
