@@ -19,6 +19,10 @@ import { useRemoveFromCart } from "@/lib/hooks/useRemoveFromCart";
 import { useAddToCart } from "@/lib/hooks/useAddToCart";
 import { ShoppingCart } from "lucide-react";
 import { NumberTicker } from "@/components/ui/number-ticker";
+import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
+import { Vortex } from "@/components/ui/vortex";
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import { StarRating } from "@/components/star-rating";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -126,6 +130,46 @@ const Products = () => {
     refetch();
   };
 
+  const contentPanel = (item: any) => {
+    return (
+      <div className="p-4 z-10 flex flex-col gap-4 bg-white rounded-xl w-[75%] border">
+        <p className="leading-relaxed whitespace-pre-line">
+          {item.description}
+        </p>
+        <p>User stories</p>
+      </div>
+    );
+  };
+
+  const titlePanel = (item: any) => {
+    return (
+      <div className="w-[25%] relative flex h-full overflow-clip p-4">
+        <DottedGlowBackground />
+
+        <div className="flex flex-col z-10 backdrop-blur-[2px] bg-white h-min w-full border p-4 rounded-xl gap-3">
+          <p className="text-base">
+            <span className="font-semibold">{item.name}</span>
+          </p>
+          <p>£5.00</p>
+
+          {checkCartPresence(item.id) ? (
+            <Button
+              className="w-full border-red-600"
+              variant="outline"
+              onClick={() => callRemoveFromCart(item.id)}
+            >
+              Remove from cart
+            </Button>
+          ) : (
+            <Button className="w-full" onClick={() => callAddToCard(item.id)}>
+              Add to cart
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading || catLoading) {
     return <PageLoader text="Loading our products..." />;
   }
@@ -133,82 +177,57 @@ const Products = () => {
   return (
     <div className="flex p-4 lg:p-10 w-full items-center justify-center relative">
       <div className="flex flex-col max-w-7xl w-full gap-6">
-        <div
-          className="w-full grid grid-cols-5 gap-2"
-          onMouseLeave={() => setHovered(null)}
-        >
+        <div className="w-full flex flex-col gap-2 py-6 items-center text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-neutral-900 dark:text-white">
+            Our Products
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400 max-w-xl">
+            Hand-crafted items tailored for your needs. Explore our categories
+            to discover more.
+          </p>
+        </div>
+
+        <div className="flex justify-center gap-3 flex-wrap">
           {categories.map((item) => {
             const isSelected = selectedCategory === item.id;
 
             return (
-              <div
+              <button
                 key={item.id}
                 onMouseEnter={() => setSelectedCategory(item.id)}
                 className={cn(
-                  "relative px-4 py-2 text-sm font-medium cursor-pointer select-none",
-                  "flex items-center justify-center rounded-lg transition-all duration-300",
+                  "relative px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   isSelected
-                    ? "text-neutral-900 dark:text-white"
-                    : "text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                 )}
               >
-                {isSelected && (
-                  <motion.div
-                    layoutId="hovered"
-                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                    className="
-              absolute inset-0 h-full w-full rounded-xl
-              
-              border border-[#1e3a8a]/40
-              shadow-[0_0_10px_rgba(30,58,138,0.25)]
-            "
-                  />
-                )}
-
-                <span className="relative z-10">{item.name}</span>
-              </div>
+                {item.name}
+              </button>
             );
           })}
         </div>
 
         <Separator />
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-rows-5 gap-4">
           {products
             .filter((p) => p.category_id === selectedCategory)
-            .map((item) => {
+            .map((item, index) => {
               return (
                 <div
                   key={item.id}
-                  className="w-full border rounded-xl p-4 gap-4 flex flex-col"
+                  className="w-full  gap-4 flex flex-row relative border rounded-xl"
                 >
-                  <div className="flex flex-col gap-4">
-                    <p className="text-base">
-                      £{item.price}{" "}
-                      <span className="font-semibold">{item.name}</span>
-                    </p>
-                    {checkCartPresence(item.id) === true ? (
-                      <Button
-                        className="w-full border-red-600"
-                        variant="outline"
-                        onClick={() => callRemoveFromCart(item.id)}
-                      >
-                        Remove from cart
-                      </Button>
-                    ) : (
-                      <Button
-                        className="w-full"
-                        disabled={checkCartPresence(item.id)}
-                        onClick={() => callAddToCard(item.id)}
-                      >
-                        Add to cart
-                      </Button>
-                    )}
-                  </div>
-
-                  <Separator />
-                  <p className="leading-relaxed whitespace-pre-line">
-                    {item.description}
-                  </p>
+                  {index % 2 === 0 ? (
+                    <div className="flex flex-row w-full h-full p-4 gap-4">
+                      {titlePanel(item)} {contentPanel(item)}
+                    </div>
+                  ) : (
+                    <div className="flex flex-row w-full h-full p-4 gap-4">
+                      {contentPanel(item)}
+                      {titlePanel(item)}
+                    </div>
+                  )}
                 </div>
               );
             })}
