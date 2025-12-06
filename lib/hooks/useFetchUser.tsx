@@ -29,7 +29,7 @@ type User = {
 
 export function useFetchUser() {
   const supabase = createClient();
-  const [user, setUser] = useState<User>({ email: "" });
+  const [user, setUser] = useState<User>({ email: "", cards: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,8 +85,6 @@ export function useFetchUser() {
         .select("*")
         .eq("user_id", resUser.user?.id);
 
-      console.log("API", api);
-
       if (resUser) {
         setUser({
           email: resUser.user?.email ? resUser.user?.email : "",
@@ -98,8 +96,8 @@ export function useFetchUser() {
             card_number: b.number,
             cvv: b.cvv,
             holder: b.holder,
-            provider: b.provider === true ? "Mastercard" : "Visa",
-            expiry: format(b.expiry, "MM/yy"),
+            provider: b.provider,
+            expiry: b.expiry,
           })),
         });
         setLoading(false);

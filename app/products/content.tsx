@@ -23,6 +23,7 @@ import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 import { Vortex } from "@/components/ui/vortex";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { StarRating } from "@/components/star-rating";
+import Link from "next/link";
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -107,9 +108,11 @@ const Products = () => {
         </div>
 
         {/* FOOTER BUTTON */}
-        <Button className="mt-4 w-full" disabled={!(cartItems.length > 0)}>
-          Checkout
-        </Button>
+        <Link href={`/payment`}>
+          <Button className="mt-4 w-full" disabled={!(cartItems.length > 0)}>
+            Checkout
+          </Button>
+        </Link>
       </motion.div>
     );
   };

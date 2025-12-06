@@ -1,230 +1,124 @@
 ﻿"use client";
 
 import {
-  useMemo,
+  useEffect,
   useState,
   type InputHTMLAttributes,
   type ReactNode,
 } from "react";
-import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { cards } from "./components/initialCards";
+import { useFetchCart } from "@/lib/hooks/useFetchCart";
+import { useAddToCart } from "@/lib/hooks/useAddToCart";
+import { useFetchProducts } from "@/lib/hooks/useFetchProducts";
+import { PageLoader } from "@/components/page-loader";
+import { NumberTicker } from "@/components/ui/number-ticker";
+import { useFetchUser } from "@/lib/hooks/useFetchUser";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { EventLoader } from "@/components/event-loader";
+import { useRemoveFromCart } from "@/lib/hooks/useRemoveFromCart";
+import Link from "next/link";
 
 type BillingInterval = "monthly" | "annual";
 
-type Plan = {
-  id: string;
-  name: string;
-  priceMonthly: number;
-  priceAnnual: number;
-  description: string;
-  features: string[];
-};
-
-type SavedCard = { label: string; name: string; exp: string; brand: string };
-
-type CardErrors = {
-  name?: string;
-  number?: string;
-  exp?: string;
-  cvc?: string;
-};
-
-const plans: Plan[] = [
-  {
-    id: "job-market",
-    name: "Job Market Data Packs",
-    priceMonthly: 25,
-    priceAnnual: 250,
-    description: "Live insights into skills, roles, and market demand.",
-    features: [
-      "Top Skills Report",
-      "Industry Trends Pack",
-      "Salary Insights Pack",
-      "Role Demand Report",
-      "Location Hotspots Pack",
-    ],
-  },
-  {
-    id: "university-performance",
-    name: "University Performance Insights",
-    priceMonthly: 25,
-    priceAnnual: 250,
-    description: "Data to help institutions improve employability outcomes.",
-    features: [
-      "Employability Scorecard",
-      "Skills Gap Summary",
-      "Course Improvement Suggestions",
-      "Graduate Outcomes Comparison",
-      "Student Feedback Insights",
-    ],
-  },
-  {
-    id: "student-career",
-    name: "Student Career Tools",
-    priceMonthly: 25,
-    priceAnnual: 250,
-    description:
-      "Tools that help students navigate the job market with clarity.",
-    features: [
-      "Career Match Quiz",
-      "Skill Gap Checker",
-      "Keyword Optimiser",
-      "Interview Prep Pack",
-      "Learning Roadmap",
-    ],
-  },
-  {
-    id: "employer-recruitment",
-    name: "Employer & Recruitment Tools",
-    priceMonthly: 25,
-    priceAnnual: 250,
-    description: "Insight and intelligence for smarter hiring decisions.",
-    features: [
-      "University Talent Finder",
-      "Hiring Trends Dashboard",
-      "Employer Brand Insights",
-      "Campus Recruitment Planner",
-      "Job Posting Keyword Tool",
-    ],
-  },
-  {
-    id: "education-skill",
-    name: "Education & Skill Development",
-    priceMonthly: 25,
-    priceAnnual: 250,
-    description: "Data-driven tools for shaping future-ready curriculums.",
-    features: [
-      "Emerging Skills Pack",
-      "Learning Resource Bundle",
-      "Certification Value Guide",
-      "Skill Development Tracker",
-      "Workshop Ideas Pack",
-    ],
-  },
-];
-
-const addOns = [
-  {
-    name: "Daily data refresh",
-    price: 10,
-    description: "24h ingestion cycles and freshness guarantees.",
-  },
-  {
-    name: "Priority support",
-    price: 4,
-    description: "Faster responses with shared Slack channel access.",
-  },
-];
-
-const initialCards: SavedCard[] = cards();
-
 export default function Payment() {
-  const searchParams = useSearchParams();
-  const initialPlanId = useMemo(() => {
-    const planParam = searchParams.get("plan");
-    return planParam && plans.some((p) => p.id === planParam)
-      ? planParam
-      : null;
-  }, [searchParams]);
+  const {
+    cartItems,
+    loading: cartLoading,
+    refetch: cartRefetch,
+  } = useFetchCart();
+  const { products, loading } = useFetchProducts();
+  const { addToCart } = useAddToCart();
+  const { removeFromCart } = useRemoveFromCart();
+  const {
+    user: { cards },
+    loading: userLoading,
+    refetch,
+    insertCard,
+  } = useFetchUser();
 
   const [interval, setInterval] = useState<BillingInterval>("monthly");
-  const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>(() =>
-    initialPlanId ? [initialPlanId] : []
-  );
-  const [showAvailable, setShowAvailable] = useState(true);
-  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [cardFormOpen, setCardFormOpen] = useState(false);
-  const [savedCards, setSavedCards] = useState<SavedCard[]>(initialCards);
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
   const [newCard, setNewCard] = useState({
-    name: "",
+    holder: "",
     number: "",
-    exp: "",
-    cvc: "",
-    brand: "Visa",
+    expiry: "",
+    cvv: "",
+    brand: false,
   });
-  const [cardErrors, setCardErrors] = useState<CardErrors>({});
   const [confirmAction, setConfirmAction] = useState<{
     planId: string;
     mode: "add" | "remove";
   } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  const selectedPlans = useMemo(
-    () => plans.filter((p) => selectedPlanIds.includes(p.id)),
-    [selectedPlanIds]
-  );
-  const availablePlans = useMemo(
-    () => plans.filter((p) => !selectedPlanIds.includes(p.id)),
-    [selectedPlanIds]
-  );
-
   const togglePlan = (planId: string, mode: "add" | "remove") => {
     setConfirmAction({ planId, mode });
+    setSelectedProduct(planId);
   };
 
-  const confirmPlanAction = () => {
+  const callRemoveFromCart = async (cartItem: string) => {
+    await removeFromCart(cartItem);
+    cartRefetch();
+  };
+
+  const confirmPlanAction = (id: string) => {
     if (!confirmAction) return;
     if (confirmAction.mode === "add") {
-      setSelectedPlanIds((prev) => [...prev, confirmAction.planId]);
       setMessage("Plan added to basket.");
     } else {
-      setSelectedPlanIds((prev) =>
-        prev.filter((id) => id !== confirmAction.planId)
-      );
       setMessage("Plan removed from basket.");
+      callRemoveFromCart(id);
     }
     setConfirmAction(null);
     setTimeout(() => setMessage(null), 2400);
   };
 
-  const toggleAddOn = (name: string) => {
-    setSelectedAddOns((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
-    );
+  const isCardValid = () => {
+    const name = newCard.holder.trim();
+
+    const nameParts = name.split(" ").filter(Boolean);
+    const nameValid =
+      nameParts.length >= 2 && nameParts.every((w) => w.length >= 1);
+    const digits = newCard.number.replace(/\D/g, "");
+    const numberValid = digits.length === 16;
+
+    const expiryValid = /^(0[1-9]|1[0-2])\/\d{2}$/.test(newCard.expiry);
+
+    const cvvValid = newCard.cvv.length >= 3;
+
+    return nameValid && numberValid && expiryValid && cvvValid;
   };
 
-  const validateCard = () => {
-    const errors: CardErrors = {};
-    if (!newCard.name.trim()) errors.name = "Name required";
-    const numberDigits = newCard.number.replace(/\D/g, "");
-    if (numberDigits.length < 13 || numberDigits.length > 19)
-      errors.number = "Enter 13-19 digits";
-    const expDigits = newCard.exp.replace(/\D/g, "");
-    if (expDigits.length !== 4) errors.exp = "MM/YY";
-    if (expDigits.length === 4) {
-      const mm = parseInt(expDigits.slice(0, 2), 10);
-      if (mm < 1 || mm > 12) errors.exp = "Invalid month";
+  const callSaveCard = async () => {
+    const id = EventLoader("Inserting bank card");
+
+    try {
+      await insertCard({
+        holder: newCard.holder,
+        card_number: newCard.number,
+        cvv: +newCard.cvv,
+        expiry: newCard.expiry,
+        provider: Math.random() < 0.5 ? "Visa" : "Mastercard",
+      });
+      setNewCard({ holder: "", number: "", expiry: "", cvv: "", brand: false });
+      setCardFormOpen(false);
+      toast.success("Bank card inserted successfully!");
+    } catch (err) {
+      toast.error("Something went wrong creating your key.");
+    } finally {
+      await refetch();
+      toast.dismiss(id);
     }
-    const cvcDigits = newCard.cvc.replace(/\D/g, "");
-    if (cvcDigits.length < 3 || cvcDigits.length > 4) errors.cvc = "3-4 digits";
-    setCardErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
-
-
-  const total = useMemo(() => {
-    const planTotal = selectedPlans.reduce(
-      (sum, p) =>
-        sum + (interval === "monthly" ? p.priceMonthly : p.priceAnnual),
-      0
-    );
-    const addOnTotal = selectedAddOns.reduce((sum, name) => {
-      const item = addOns.find((a) => a.name === name);
-      return sum + (item ? item.price : 0);
-    }, 0);
-    return planTotal + addOnTotal;
-  }, [interval, selectedPlans, selectedAddOns]);
-
-  const formatPrice = (amount: number) => `\u00a3${amount.toFixed(0)}`;
-  const savingsPercent =
-    100 -
-    Math.round((plans[0].priceAnnual / (plans[0].priceMonthly * 12)) * 100);
+  if (loading || cartLoading || userLoading) {
+    return <PageLoader text="Loading payment..." />;
+  }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-10">
+    <div className="mx-auto max-w-7xl p-10">
       <header className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.25em] text-neutral-500 dark:text-white/50">
@@ -249,7 +143,7 @@ export default function Payment() {
             Monthly
           </span>
           <span className="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-            Save {savingsPercent}% annually
+            Save 17% annually
           </span>
           <span
             className={cn(
@@ -270,104 +164,34 @@ export default function Payment() {
             title="Selected products"
             description="Plans added to your basket."
           >
-            {selectedPlans.length === 0 ? (
-              <p className="text-sm text-neutral-500 dark:text-white/60">
-                No plans selected yet.
-              </p>
+            {cartItems.length === 0 ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-neutral-500 dark:text-white/60">
+                  No plans selected yet.
+                </p>
+                <Link href="/products">
+                  <Button className="w-full">Return to products</Button>
+                </Link>
+              </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {selectedPlans.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    interval={interval}
-                    actionLabel="Remove"
-                    onAction={() => togglePlan(plan.id, "remove")}
-                    variant="selected"
-                  />
-                ))}
+                {cartItems.map((plan) => {
+                  const product = products.find(
+                    (p) => p.id === plan.product_id
+                  );
+                  return (
+                    <PlanCard
+                      key={plan.id}
+                      plan={product}
+                      interval={interval}
+                      actionLabel="Remove"
+                      onAction={() => togglePlan(plan.product_id, "remove")}
+                      variant="selected"
+                    />
+                  );
+                })}
               </div>
             )}
-          </SectionCard>
-
-          <SectionCard
-            title="Available products"
-            description="Click a pack to add it to your basket."
-            action={
-              <button
-                className="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
-                onClick={() => setShowAvailable((s) => !s)}
-              >
-                {showAvailable ? "Hide" : "Show"}
-              </button>
-            }
-          >
-            {showAvailable && (
-              <div className="grid gap-4 md:grid-cols-2">
-                {availablePlans.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    interval={interval}
-                    actionLabel="Add"
-                    onAction={() => togglePlan(plan.id, "add")}
-                    variant="available"
-                  />
-                ))}
-              </div>
-            )}
-            {!showAvailable && (
-              <p className="text-sm text-neutral-500 dark:text-white/60">
-                Available packs hidden.
-              </p>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Optional add-ons"
-            description="Enhance your plan with extras."
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              {addOns.map((addOn) => {
-                const active = selectedAddOns.includes(addOn.name);
-                return (
-                  <div
-                    key={addOn.name}
-                    className={cn(
-                      "relative rounded-2xl border p-4 transition",
-                      active
-                        ? "border-blue-500 bg-blue-50/60 dark:border-blue-400 dark:bg-blue-400/10"
-                        : "border-neutral-200 bg-white dark:border-white/10 dark:bg-neutral-900/60"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-base font-semibold">{addOn.name}</p>
-                        <p className="text-sm text-neutral-500 dark:text-white/60">
-                          {addOn.description}
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-blue-600 px-3 py-1 text-sm font-semibold text-white shadow-sm transition dark:bg-blue-500">
-                        {"\u00a3"}
-                        {addOn.price}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => toggleAddOn(addOn.name)}
-                      className={cn(
-                        "mt-4 w-full rounded-xl px-3 py-2 text-sm font-semibold text-white transition",
-                        active
-                          ? "bg-blue-600 hover:bg-blue-700"
-                          : "bg-blue-500 hover:bg-blue-600",
-                        "dark:bg-blue-500 dark:hover:bg-blue-600"
-                      )}
-                    >
-                      {active ? "Remove add-on" : "Add add-on"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
           </SectionCard>
         </div>
 
@@ -377,37 +201,29 @@ export default function Payment() {
             description="Review your selection before checkout."
           >
             <div className="space-y-3">
-              {selectedPlans.length === 0 && (
-                <p className="text-sm text-neutral-500 dark:text-white/60">
-                  Add at least one plan to continue.
-                </p>
-              )}
-              {selectedPlans.map((plan) => (
-                <LineItem
-                  key={plan.id}
-                  label={plan.name}
-                  price={
-                    interval === "monthly"
-                      ? plan.priceMonthly
-                      : plan.priceAnnual
-                  }
-                  interval={interval}
-                />
-              ))}
-              {selectedAddOns.map((name) => {
-                const addOn = addOns.find((a) => a.name === name);
-                if (!addOn) return null;
-                return (
-                  <LineItem key={name} label={addOn.name} price={addOn.price} />
-                );
-              })}
               <div className="mt-4 border-t border-dashed border-neutral-200 pt-4 dark:border-white/10">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-600 dark:text-white/70">
                     Total
                   </span>
                   <div className="text-right">
-                    <p className="text-xl font-bold">{formatPrice(total)}</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-semibold text-neutral-700 dark:text-white/70">
+                        {"\u00a3"}
+                      </span>
+                      <span className="text-3xl font-bold">
+                        <NumberTicker
+                          value={
+                            interval === "monthly"
+                              ? cartItems.length * 5
+                              : cartItems.length * 5 * 10
+                          }
+                        />
+                      </span>
+                      <span className="text-xs text-neutral-500 dark:text-white/60">
+                        {interval === "monthly" ? "/month" : "/year"}
+                      </span>
+                    </div>
                     <p className="text-xs text-neutral-500 dark:text-white/60">
                       Excludes taxes
                     </p>
@@ -415,10 +231,10 @@ export default function Payment() {
                 </div>
               </div>
               <button
-                disabled={selectedPlans.length === 0}
+                disabled={cartItems.length === 0}
                 className={cn(
                   "mt-2 w-full rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg transition",
-                  selectedPlans.length === 0
+                  cartItems.length === 0
                     ? "cursor-not-allowed bg-neutral-300 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
                     : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:shadow-[0_18px_40px_rgba(59,130,246,0.35)]"
                 )}
@@ -436,11 +252,12 @@ export default function Payment() {
             description="Tap a card to view or select."
           >
             <div className="space-y-3">
-              {savedCards.map((card, idx) => {
+              {cards.map((card, idx) => {
                 const active = idx === activeCardIndex;
+
                 return (
                   <button
-                    key={card.label}
+                    key={card.id}
                     onClick={() => setActiveCardIndex(idx)}
                     className={cn(
                       "w-full rounded-2xl border px-4 py-3 text-left transition",
@@ -451,9 +268,17 @@ export default function Payment() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-semibold">{card.label}</p>
+                        <p className="font-semibold">
+                          {card.provider +
+                            " **** " +
+                            String(card.card_number).slice(-4)}
+                        </p>
                         <p className="text-xs text-neutral-500 dark:text-white/60">
-                          {card.name} - Expires {card.exp}
+                          {card.holder} - Expires{" "}
+                          {card.expiry
+                            .replace(/\D/g, "")
+                            .slice(0, 4)
+                            .replace(/(\d{2})(\d{(1, 2)})/, "$1/$2")}
                         </p>
                       </div>
                       {active && (
@@ -465,6 +290,7 @@ export default function Payment() {
                   </button>
                 );
               })}
+
               <button
                 className="w-full rounded-xl border border-dashed border-neutral-300 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:border-blue-400 dark:border-white/15 dark:text-blue-300"
                 onClick={() => setCardFormOpen((v) => !v)}
@@ -478,32 +304,30 @@ export default function Payment() {
             <SectionCard title="Add a new card">
               <div className="space-y-3">
                 <Input
-                  label="Cardholder name"
-                  value={newCard.name}
+                  value={newCard.holder}
                   onChange={(e) =>
-                    setNewCard((c) => ({ ...c, name: e.target.value }))
+                    setNewCard((c) => ({ ...c, holder: e.target.value }))
                   }
-                  error={cardErrors.name}
                   placeholder="Alex Johnson"
+                  label={""}
                 />
+
                 <Input
-                  label="Card number"
                   value={newCard.number}
                   onChange={(e) => {
                     const digits = e.target.value
                       .replace(/\D/g, "")
-                      .slice(0, 19);
+                      .slice(0, 16);
                     const grouped = digits.replace(/(.{4})/g, "$1 ").trim();
                     setNewCard((c) => ({ ...c, number: grouped }));
                   }}
-                  error={cardErrors.number}
                   placeholder="4242 4242 4242 4242"
                   inputMode="numeric"
                 />
+
                 <div className="grid grid-cols-2 gap-3">
                   <Input
-                    label="Expiry"
-                    value={newCard.exp}
+                    value={newCard.expiry}
                     onChange={(e) => {
                       const digits = e.target.value
                         .replace(/\D/g, "")
@@ -512,48 +336,33 @@ export default function Payment() {
                         digits.length > 2
                           ? `${digits.slice(0, 2)}/${digits.slice(2)}`
                           : digits;
-                      setNewCard((c) => ({ ...c, exp: withSlash }));
+                      setNewCard((c) => ({ ...c, expiry: withSlash }));
                     }}
-                    error={cardErrors.exp}
                     placeholder="MM/YY"
                     inputMode="numeric"
                   />
+
                   <Input
-                    label="CVC"
-                    value={newCard.cvc}
+                    value={newCard.cvv}
                     onChange={(e) => {
                       const digits = e.target.value
                         .replace(/\D/g, "")
-                        .slice(0, 4);
-                      setNewCard((c) => ({ ...c, cvc: digits }));
+                        .slice(0, 3);
+                      setNewCard((c) => ({ ...c, cvv: digits }));
                     }}
-                    error={cardErrors.cvc}
                     placeholder="123"
                     inputMode="numeric"
                   />
                 </div>
-                <div className="flex gap-3">
-                  {["Visa", "Mastercard", "Amex"].map((brand) => (
-                    <button
-                      key={brand}
-                      onClick={() => setNewCard((c) => ({ ...c, brand }))}
-                      className={cn(
-                        "rounded-xl border px-3 py-2 text-sm font-semibold transition",
-                        newCard.brand === brand
-                          ? "border-blue-500 bg-blue-50/60 text-blue-700 dark:border-blue-400 dark:bg-blue-400/10 dark:text-blue-100"
-                          : "border-neutral-200 bg-white text-neutral-700 dark:border-white/10 dark:bg-neutral-900/60 dark:text-white/80"
-                      )}
-                    >
-                      {brand}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={saveNewCard}
-                  className="mt-2 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 dark:bg-white dark:text-neutral-900"
+                <Button
+                  className="w-full"
+                  disabled={!isCardValid()}
+                  onClick={() => {
+                    callSaveCard();
+                  }}
                 >
                   Save card
-                </button>
+                </Button>
               </div>
             </SectionCard>
           )}
@@ -568,7 +377,9 @@ export default function Payment() {
               : "Remove plan from basket?"
           }
           onCancel={() => setConfirmAction(null)}
-          onConfirm={confirmPlanAction}
+          onConfirm={() => {
+            confirmPlanAction(selectedProduct);
+          }}
           confirmLabel={confirmAction.mode === "add" ? "Add" : "Remove"}
         >
           {confirmAction.mode === "add"
@@ -630,7 +441,6 @@ function PlanCard({
   onAction: () => void;
   variant: "selected" | "available";
 }) {
-  const price = interval === "monthly" ? plan.priceMonthly : plan.priceAnnual;
   const isSelected = variant === "selected";
   return (
     <div
@@ -647,7 +457,7 @@ function PlanCard({
       </p>
       <h3 className="mt-1 text-xl font-semibold">{plan.name}</h3>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        {plan.features.map((feature) => (
+        {/* {plan.features.map((feature) => (
           <div
             key={feature}
             className="flex items-start gap-2 text-sm leading-snug"
@@ -655,14 +465,18 @@ function PlanCard({
             <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-400" />
             <span>{feature}</span>
           </div>
-        ))}
+        ))} */}
       </div>
       <div className="mt-5 flex items-center justify-between gap-3">
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-semibold text-neutral-700 dark:text-white/70">
             {"\u00a3"}
           </span>
-          <span className="text-3xl font-bold">{price}</span>
+          <span className="text-3xl font-bold">
+            <NumberTicker
+              value={interval === "monthly" ? plan.price : plan.price * 10}
+            />
+          </span>
           <span className="text-xs text-neutral-500 dark:text-white/60">
             {interval === "monthly" ? "/month" : "/year"}
           </span>
