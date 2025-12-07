@@ -135,7 +135,7 @@ const Products = () => {
 
   const contentPanel = (item: any) => {
     return (
-      <div className="p-4 z-10 flex flex-col gap-4 bg-white rounded-xl w-[75%] border">
+      <div className="p-4 z-10 flex flex-col gap-4 rounded-xl w-[75%] border">
         <p className="leading-relaxed whitespace-pre-line">
           {item.description}
         </p>
@@ -148,7 +148,7 @@ const Products = () => {
       <div className="w-[25%] relative flex h-full overflow-clip p-4">
         <DottedGlowBackground />
 
-        <div className="flex flex-col z-10 backdrop-blur-[2px] bg-white h-min w-full border p-4 rounded-xl gap-3">
+        <div className="flex flex-col z-10 backdrop-blur-[2px]  h-min w-full border p-4 rounded-xl gap-3">
           <p className="text-base">
             <span className="font-semibold">{item.name}</span>
           </p>
